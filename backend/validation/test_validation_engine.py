@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 import unittest
@@ -53,10 +55,22 @@ def _valid_payloads():
     }
     execution_plan = {
         "trade_intent_id": "ti-001",
-        "register_payload": {"target": "reactive_router", "method": "register"},
+        "register_payload": {
+            "intentId": "0x" + "1" * 64,
+            "owner": "0x0000000000000000000000000000000000000001",
+            "inputToken": "0x0000000000000000000000000000000000000002",
+            "outputToken": "0x0000000000000000000000000000000000000003",
+            "plannedEntrySize": 1200000000,
+            "entryAmountOutMinimum": 599400000000000000,
+            "entryValidUntil": 1710003540,
+            "maxGasPriceGwei": 27,
+            "stopLossSlippageBps": 90,
+            "takeProfitSlippageBps": 250,
+            "exitMinOutFloor": 594005400000000000,
+        },
         "hard_constraints": {
-            "max_slippage_bps": 15,
-            "ttl_seconds": 1800,
+            "max_slippage_bps": 10,
+            "ttl_seconds": 3540,
             "stop_loss_bps": 90,
             "take_profit_bps": 250,
         },
@@ -80,6 +94,26 @@ class ValidationEngineTestCase(unittest.TestCase):
         self.assertEqual(
             result.validated_objects,
             ("StrategyTemplate", "StrategyIntent", "TradeIntent", "ExecutionPlan"),
+        )
+        self.assertEqual(
+            [binding.model_dump() for binding in result.contract_bindings],
+            [
+                {"source_field": "strategy_template.template_id", "target_field": "strategy_intent.template_id", "unit": "identity"},
+                {"source_field": "strategy_template.version", "target_field": "strategy_intent.template_version", "unit": "identity"},
+                {"source_field": "strategy_template.execution_mode", "target_field": "strategy_intent.execution_mode", "unit": "identity"},
+                {"source_field": "trade_intent.trade_intent_id", "target_field": "execution_plan.trade_intent_id", "unit": "identity"},
+                {"source_field": "trade_intent.max_slippage_bps", "target_field": "execution_plan.hard_constraints.max_slippage_bps", "unit": "bps"},
+                {"source_field": "trade_intent.ttl_seconds", "target_field": "execution_plan.hard_constraints.ttl_seconds", "unit": "seconds"},
+                {"source_field": "trade_intent.stop_loss_bps", "target_field": "execution_plan.hard_constraints.stop_loss_bps", "unit": "bps"},
+                {"source_field": "trade_intent.take_profit_bps", "target_field": "execution_plan.hard_constraints.take_profit_bps", "unit": "bps"},
+                {"source_field": "execution_plan.register_payload.intentId", "target_field": "register_call.intentId", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.owner", "target_field": "investment_intent.owner", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.inputToken", "target_field": "investment_intent.inputToken", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.outputToken", "target_field": "investment_intent.outputToken", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.plannedEntrySize", "target_field": "investment_intent.plannedEntrySize", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.entryAmountOutMinimum", "target_field": "investment_intent.entryMinOut", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.exitMinOutFloor", "target_field": "investment_intent.exitMinOutFloor", "unit": "identity"},
+            ],
         )
 
     def test_field_range_validation_rejects_invalid_ttl(self):
@@ -142,6 +176,18 @@ class ValidationEngineTestCase(unittest.TestCase):
                 strategy_intent=strategy_intent,
                 trade_intent=trade_intent,
             )
+
+    def test_successful_validation_requires_contract_facing_bindings(self):
+        strategy_template, strategy_intent, trade_intent, _ = _valid_payloads()
+
+        result = validate_inputs(
+            strategy_template=strategy_template,
+            strategy_intent=strategy_intent,
+            trade_intent=trade_intent,
+        )
+
+        self.assertTrue(result.is_valid)
+        self.assertGreater(len(result.contract_bindings), 0)
 
 
 if __name__ == "__main__":

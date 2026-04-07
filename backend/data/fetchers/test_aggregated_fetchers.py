@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import sys
 from decimal import Decimal
 from typing import Any
 
 import pytest
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
 from backend.data.context_builder import DecisionContextBuilder, StrategyConstraints
 from backend.data.fetchers import (
@@ -214,4 +220,28 @@ def test_onchain_fetcher_raises_clear_error_on_timeout() -> None:
         asyncio.run(fetcher.fetch_onchain_flow())
 
     assert "onchain flow" in str(exc_info.value).lower()
+    assert exc_info.value.__cause__ is not None
+
+
+def test_execution_fetcher_requires_provider() -> None:
+    with pytest.raises(ValueError) as exc_info:
+        AggregatedExecutionFetcher(None)
+
+    assert "execution state provider" in str(exc_info.value).lower()
+
+
+def test_execution_fetcher_raises_clear_error_on_timeout() -> None:
+    provider = RecordingProvider(
+        provider_name="execution-primary",
+        errors={
+            "execution_state": ProviderUpstreamError("upstream request failed after retries")
+        },
+    )
+
+    fetcher = AggregatedExecutionFetcher(provider)
+
+    with pytest.raises(ProviderDomainError) as exc_info:
+        asyncio.run(fetcher.fetch_execution_state())
+
+    assert "execution state" in str(exc_info.value).lower()
     assert exc_info.value.__cause__ is not None

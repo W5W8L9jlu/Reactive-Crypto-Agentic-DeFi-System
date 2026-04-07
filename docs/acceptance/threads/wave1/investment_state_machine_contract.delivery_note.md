@@ -1,52 +1,54 @@
 # 线程交付说明
 
+> Canonical source for `investment_state_machine_contract` delivery notes.
+> Duplicate file `investment_state_machine_contract_delivery_note.md` is retired and must only point here.
+
 ## 基本信息
 - 模块名：`investment_state_machine_contract`
 - Prompt 文件：`docs/prompts/investment_state_machine_contract.prompt.md`
 - Wave：`wave_1`
-- 负责人：not verified yet
-- 分支：not verified yet
-- commit：not verified yet
+- 负责人：`Worker 5`
+- 分支：`w1-gate-fail-fix`
+- commit：`c5afba2`
 
 ## 本次交付做了什么
-- 定义了 `PendingEntry`、`ActivePosition`、`Closed` 三态与 `InvestmentIntent` 接口形状
-- 实现了 `registerInvestmentIntent` 与 `executeReactiveTrigger` 的最小状态流转与 require 检查
-- 增加了注册态、执行态、非法重入、约束失败相关错误与事件
+- 保持 `IReactiveInvestmentCompiler.sol` 与 `ReactiveInvestmentCompiler.sol` 的现有状态机语义不变，没有为“过门”而发明新行为
+- 新增 `backend/contracts/test/ReactiveInvestmentCompiler.t.sol`，把模块 contract 要求转成 7 个可复跑的 Foundry 测试
+- 将本模块的 acceptance / handoff 证据收敛为单一 authoritative source，并退休冲突的下划线重复版本
 
 ## 修改了哪些文件
-- `backend/contracts/interfaces/IReactiveInvestmentCompiler.sol`
-- `backend/contracts/core/ReactiveInvestmentCompiler.sol`
-
-## 没做什么
-- 没有实现链下信号后再执行的混合模式
-- 没有引入自由策略决策
-- 没有补充 Solidity 测试工程或执行链上编译验证
+- `backend/contracts/test/ReactiveInvestmentCompiler.t.sol`
+- `docs/acceptance/threads/wave1/investment_state_machine_contract.delivery_note.md`
+- `docs/acceptance/threads/wave1/investment_state_machine_contract.test_evidence.md`
+- `docs/acceptance/threads/wave1/investment_state_machine_contract.thread_acceptance.md`
+- `docs/acceptance/handoffs/wave1/investment_state_machine_contract.thread_to_thread_handoff.md`
+- `docs/acceptance/threads/wave1/investment_state_machine_contract_delivery_note.md`
+- `docs/acceptance/threads/wave1/investment_state_machine_contract_test_evidence.md`
+- `docs/acceptance/threads/wave1/investment_state_machine_contract_thread_acceptance.md`
+- `docs/acceptance/handoffs/wave1/investment_state_machine_contract_thread_to_thread_handoff.md`
 
 ## 运行了哪些命令
 ```bash
-git diff --name-only HEAD
-git log --oneline -n 10
-git status --short
-Get-Content docs/knowledge/01_core/01_system_invariants.md
-Get-Content docs/knowledge/01_core/02_domain_models.md
-Get-Content docs/knowledge/05_reactive_contracts/02_investment_state_machine.md
-Get-Content docs/contracts/investment_state_machine_contract.contract.md
-Get-Content docs/knowledge/04_execution/01_execution_compiler.md
-Get-ChildItem docs/prompts -Recurse -File | Where-Object { $_.Name -match 'investment_state_machine_contract' }
-Get-Content backend/contracts/interfaces/IReactiveInvestmentCompiler.sol
-Get-Content backend/contracts/core/ReactiveInvestmentCompiler.sol
-solc --version
+git status --short --branch
+git log --oneline -n 5
+git branch --show-current
+git rev-parse --short HEAD
+D:\Foundry\bin\forge.exe build --root . --contracts backend/contracts
+$env:FOUNDRY_CACHE_PATH='D:/reactive-crypto-agentic-DeFi-system/.foundry-cache'; D:\Foundry\bin\forge.exe test --root . --contracts backend/contracts --match-path 'backend/contracts/test/ReactiveInvestmentCompiler.t.sol' -vv
 ```
 
 ## 验收证据
-- 测试截图：not verified yet
-- 日志：not verified yet
-- 示例 payload：`intentId`、`InvestmentIntent`、`observedOut`、`runtimeExitMinOut`
-- 示例输出：`InvestmentIntentRegistered` / `InvestmentStateAdvanced` 事件与状态流转
+- authoritative 测试记录：`docs/acceptance/threads/wave1/investment_state_machine_contract.test_evidence.md`
+- authoritative 线程验收：`docs/acceptance/threads/wave1/investment_state_machine_contract.thread_acceptance.md`
+- authoritative 线程交接：`docs/acceptance/handoffs/wave1/investment_state_machine_contract.thread_to_thread_handoff.md`
+- compile / test 结果：`forge build` 成功；`forge test` 7/7 通过
+
+## 没做什么
+- 没有引入链下信号后再执行的混合模式
+- 没有加入自由策略决策
+- 没有补造链上部署回执或不存在的下游集成证据
 
 ## 对下游线程的影响
-- 新增输入对象：`InvestmentIntent`
-- 新增输出对象：状态枚举 `PositionState`、`InvestmentStateAdvanced` 事件
-- 新增异常：`IntentAlreadyRegistered`、`IntentNotRegistered`、`ClosedIntentCannotExecute`、`EntryConstraintViolation`、`ExitConstraintViolation`、`RuntimeExitMinOutTooLow`、`ActualPositionSizeNotRecorded`
-- 新增命令/入口：`registerInvestmentIntent`、`executeReactiveTrigger`
-- 需要下游同步更新的点：下游执行器/编译器需要按新的状态机接口提交 `intentId` 和触发参数，不得假设 Closed 后仍可再次触发
+- 下游现在应只引用 canonical evidence 文件，不能再从下划线重复版本读取事实
+- 接口和异常模型不变：`InvestmentIntent`、`PositionState`、`registerInvestmentIntent`、`executeReactiveTrigger`
+- 下游仍必须遵守 `Closed` 不能再次触发，且不能把本模块理解为“链下先决定、链上再执行”的混合模型

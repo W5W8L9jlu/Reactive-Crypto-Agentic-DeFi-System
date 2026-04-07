@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Iterator
 
-from pydantic import BaseModel, ConfigDict, RootModel
+from pydantic import BaseModel, ConfigDict, RootModel, TypeAdapter
 
 try:
     from .errors import ExportDomainError
@@ -35,6 +35,9 @@ class ExportOutputs:
     investment_memo: str
 
 
+_JSON_NORMALIZER = TypeAdapter(dict[str, Any])
+
+
 def export_outputs(
     *,
     decision_artifact: DecisionArtifact,
@@ -51,10 +54,11 @@ def export_outputs(
         execution_record=execution_record.root,
     )
     machine_truth_doc = machine_truth_model.model_dump(mode="python")
+    json_ready_machine_truth_doc = _JSON_NORMALIZER.dump_python(machine_truth_doc, mode="json")
 
     try:
         machine_truth_json = json.dumps(
-            machine_truth_doc,
+            json_ready_machine_truth_doc,
             ensure_ascii=False,
             sort_keys=True,
             separators=(",", ":"),
@@ -62,7 +66,7 @@ def export_outputs(
     except TypeError as exc:
         raise ExportDomainError(f"Machine Truth JSON 序列化失败: {exc}") from exc
 
-    excerpt_items = list(_iter_json_leaves(machine_truth_doc, pointer=""))
+    excerpt_items = list(_iter_json_leaves(json_ready_machine_truth_doc, pointer=""))
     audit_markdown = _render_audit_markdown(excerpt_items)
     investment_memo = _render_investment_memo(
         machine_truth_json=machine_truth_json,

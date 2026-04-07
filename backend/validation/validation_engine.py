@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from backend.strategy.models import StrategyIntent, StrategyTemplate, TradeIntent
 
 from .errors import MissingValidationSpecError, ValidationEngineDomainError
-from .models import ExecutionPlan, ValidationInput, ValidationResult
+from .models import ContractBinding, ExecutionPlan, ValidationInput, ValidationResult
 
 
 def validate_inputs_or_raise(
@@ -28,6 +28,7 @@ def validate_inputs_or_raise(
     return ValidationResult(
         is_valid=True,
         validated_objects=_resolve_validated_objects(execution_plan=validated_input.execution_plan),
+        contract_bindings=_build_contract_bindings(validated_input),
     )
 
 
@@ -95,3 +96,91 @@ def _resolve_validated_objects(
     if execution_plan is None:
         return ("StrategyTemplate", "StrategyIntent", "TradeIntent")
     return ("StrategyTemplate", "StrategyIntent", "TradeIntent", "ExecutionPlan")
+
+
+def _build_contract_bindings(validated_input: ValidationInput) -> tuple[ContractBinding, ...]:
+    bindings: list[ContractBinding] = [
+        ContractBinding(
+            source_field="strategy_template.template_id",
+            target_field="strategy_intent.template_id",
+            unit="identity",
+        ),
+        ContractBinding(
+            source_field="strategy_template.version",
+            target_field="strategy_intent.template_version",
+            unit="identity",
+        ),
+        ContractBinding(
+            source_field="strategy_template.execution_mode",
+            target_field="strategy_intent.execution_mode",
+            unit="identity",
+        ),
+    ]
+    if validated_input.execution_plan is None:
+        return tuple(bindings)
+
+    bindings.extend(
+        [
+            ContractBinding(
+                source_field="trade_intent.trade_intent_id",
+                target_field="execution_plan.trade_intent_id",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="trade_intent.max_slippage_bps",
+                target_field="execution_plan.hard_constraints.max_slippage_bps",
+                unit="bps",
+            ),
+            ContractBinding(
+                source_field="trade_intent.ttl_seconds",
+                target_field="execution_plan.hard_constraints.ttl_seconds",
+                unit="seconds",
+            ),
+            ContractBinding(
+                source_field="trade_intent.stop_loss_bps",
+                target_field="execution_plan.hard_constraints.stop_loss_bps",
+                unit="bps",
+            ),
+            ContractBinding(
+                source_field="trade_intent.take_profit_bps",
+                target_field="execution_plan.hard_constraints.take_profit_bps",
+                unit="bps",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.intentId",
+                target_field="register_call.intentId",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.owner",
+                target_field="investment_intent.owner",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.inputToken",
+                target_field="investment_intent.inputToken",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.outputToken",
+                target_field="investment_intent.outputToken",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.plannedEntrySize",
+                target_field="investment_intent.plannedEntrySize",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.entryAmountOutMinimum",
+                target_field="investment_intent.entryMinOut",
+                unit="identity",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.exitMinOutFloor",
+                target_field="investment_intent.exitMinOutFloor",
+                unit="identity",
+            ),
+        ]
+    )
+    return tuple(bindings)

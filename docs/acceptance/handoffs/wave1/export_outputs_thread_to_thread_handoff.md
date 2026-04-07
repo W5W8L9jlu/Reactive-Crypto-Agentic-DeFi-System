@@ -1,58 +1,41 @@
-# 线程间对接单
+# Thread Handoff: export_outputs
 
-- 上游线程：`export_outputs`
-- 下游线程：`not verified yet`
-- Wave：`wave_1`
-- handoff 日期：2026-03-31
-- 上游 commit：`not verified yet`
+- Upstream thread: `export_outputs`
+- Downstream consumer status: `three-output envelope stable; stricter field contract still optional future work`
+- Wave: `W1`
+- Branch / HEAD observed: `w1-gate-fail-fix` @ `c5afba2`
 
-## 1. 上游已经稳定的东西
-- 输出 1：`machine_truth_json`
-- 输出 2：`audit_markdown`
-- 输出 3：`investment_memo`
-- 领域异常：`ExportDomainError`
-- 文件路径：`backend/export/export_outputs.py`、`backend/export/errors.py`、`backend/export/__init__.py`
+## Stable interfaces
 
-## 2. 下游必须按此消费
-### 输入对象
-```json
-{
-  "decision_artifact": {
-    "any": "json payload"
-  },
-  "execution_record": {
-    "any": "json payload"
-  }
-}
-```
+- Entry point:
+  - `export_outputs(...)`
+- Stable wrappers:
+  - `DecisionArtifact`
+  - `ExecutionRecord`
+  - `ExportOutputs`
+  - `MachineTruth`
 
-### 输出对象
-```json
-{
-  "machine_truth_json": "{\"decision_artifact\":{...},\"execution_record\":{...}}",
-  "audit_markdown": "# Audit Markdown Excerpt\n...",
-  "investment_memo": "# Investment Memo\n..."
-}
-```
+## Upstream producer path now evidenced
 
-### 异常模型
-```text
-ExportDomainError
-```
+- `ValidationResult` from `backend.validation.validate_inputs_or_raise(...)` can be serialized into `DecisionArtifact`.
+- `ExecutionPlan` from `backend.validation.models.ExecutionPlan` can be serialized into `ExecutionRecord`.
+- The output bundle remains:
+  - `machine_truth_json`
+  - `audit_markdown`
+  - `investment_memo`
 
-## 3. 约束
-- 不允许把 `audit_markdown` 当成新的执行真相。
-- 不允许把 `investment_memo` 回写到 machine truth。
-- 不允许在本模块加入执行、策略判断、审批逻辑。
-- 不允许对空产物静默补默认值；当前实现对未定义场景显式抛错。
+## Constraints for downstream work
 
-## 4. 示例
-- sample request：`export_outputs(decision_artifact, execution_record, memo_brief="...")`
-- sample response：`ExportOutputs(machine_truth_json=..., audit_markdown=..., investment_memo=...)`
-- sample failure：空 `decision_artifact` 与空 `execution_record` 时抛出 `ExportDomainError`
+- Do not treat `audit_markdown` or `investment_memo` as replacement execution truth.
+- Do not silently fill missing export inputs.
+- If stricter field-level schema is needed, document it before replacing the current generic wrappers.
 
-## 5. 未完成项
-- TODO：`docs/knowledge/08_delivery/01_export_outputs.md` 未定义 Investment Memo 正式模板。
-- TODO：空产物导出语义仍需知识库补齐。
-- 风险提示：当前工作区没有 git 历史，且未运行更大范围集成测试。
+## Verification source
 
+- `python -m unittest backend.export.test_export_outputs`
+  - Result: `4 tests OK`
+
+## Remaining TODOs
+
+- Formal memo template remains unspecified in knowledge docs.
+- Empty artifact/export semantics remain an explicit error path until the knowledge base defines them.

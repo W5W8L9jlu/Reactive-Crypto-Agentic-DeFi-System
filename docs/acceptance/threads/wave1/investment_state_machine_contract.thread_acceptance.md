@@ -1,50 +1,52 @@
 # 线程内验收清单
 
+> Canonical source for `investment_state_machine_contract` thread acceptance.
+> Duplicate file `investment_state_machine_contract_thread_acceptance.md` is retired and must only point here.
+
 - 模块 / prompt：`investment_state_machine_contract` / `docs/prompts/investment_state_machine_contract.prompt.md`
 - Wave：`wave_1`
-- 线程负责人：not verified yet
-- 分支：not verified yet
-- commit：not verified yet
-- 改动目录：`backend/contracts/interfaces`，`backend/contracts/core`
-- 是否只改允许路径：是
+- 线程负责人：`Worker 5`
+- 分支：`w1-gate-fail-fix`
+- commit：`c5afba2`
+- 改动目录：`backend/contracts/**` 与本模块 acceptance / handoff 文档
+- 是否只改允许路径：`yes`
 
 ## A. 职责边界
-- 本模块的目标职责是否完成：是
-- 是否引入了不属于本模块的逻辑：否
-- 是否修改了共享 schema / 契约：是
-- 若修改，是否同步通知依赖线程：not verified yet
+- 本模块的目标职责是否完成：`yes`
+- 是否引入了不属于本模块的逻辑：`no`
+- 是否修改了共享 schema / 契约：`no`
+- 是否把重复 evidence 收敛成单一权威来源：`yes`
 
 ## B. Contract 对齐
-- 是否逐条对齐 implementation contract：是
-- 未满足项：无已知未满足项；链上结算/记账不在本模块 contract 范围内，保留 `TODO`
-- 明确拒绝实现的项（若有）：链下信号后再执行的混合模式；自由策略决策
+- 是否逐条对齐 implementation contract：`yes`
+- 已验证项：`registerInvestmentIntent`、`executeReactiveTrigger`、状态流转与 require 检查
+- 未满足项：无新增未满足项；出场后的结算 / 记账语义仍保持原实现中的 `TODO(domain)`
+- 明确拒绝实现的项：`链下信号后再执行的混合模式`、`自由策略决策`
 
 ## C. Invariants 检查
-- JSON 仍是唯一执行真相：不适用
-- Audit 是否只做摘抄：不适用
-- Investment Memo 是否未污染执行真相：不适用
-- 是否仍然只信 RPC 作为执行真相：不适用
-- Execution Compiler 是否只在注册时工作：是
-- Reactive 是否未承载自由决策：是
-- Shadow Monitor 是否保持独立：不适用
+- 状态只能是 `PendingEntry -> ActivePosition -> Closed`：`yes`，由 Foundry 测试覆盖
+- `Closed` 不得再次触发：`yes`，由 `ClosedIntentCannotExecute` 测试覆盖
+- 入场成功后记录 `actualPositionSize`：`yes`
+- 入场和出场运行时检查不同：`yes`
+- 是否存在 hybrid offchain-then-execute decision model：`no`
 
 ## D. 验证证据
+- authoritative 测试文档：`docs/acceptance/threads/wave1/investment_state_machine_contract.test_evidence.md`
 - 运行的命令：
-  - `git diff --name-only HEAD`，结果：not verified yet，当前工作区未被识别为 git repository
-  - `git log --oneline -n 10`，结果：not verified yet，当前工作区未被识别为 git repository
-  - `Get-Content docs/knowledge/...` 与 `Get-Content backend/contracts/...`，用于读取模块约束与实现文件
-  - `solc --version`，结果：not verified yet，当前环境未安装 `solc`
-- 测试结果：not verified yet
+  - `git branch --show-current` -> `w1-gate-fail-fix`
+  - `git rev-parse --short HEAD` -> `c5afba2`
+  - `D:\Foundry\bin\forge.exe build --root . --contracts backend/contracts` -> `Compiler run successful!`
+  - `$env:FOUNDRY_CACHE_PATH='D:/reactive-crypto-agentic-DeFi-system/.foundry-cache'; D:\Foundry\bin\forge.exe test --root . --contracts backend/contracts --match-path 'backend/contracts/test/ReactiveInvestmentCompiler.t.sol' -vv` -> `7 passed; 0 failed; 0 skipped`
+- 测试结果：`pass`
 - 样例输入：`intentId` + `InvestmentIntent` + `observedOut` + `runtimeExitMinOut`
-- 样例输出：状态事件 `InvestmentStateAdvanced`，以及对应状态流转；具体链上回执 not verified yet
-- 截图/日志/回执路径：not verified yet
+- 样例输出：`InvestmentIntentRegistered` / `InvestmentStateAdvanced` 与状态流转
 
 ## E. Known gaps
-- TODO：出场后的结算/记账逻辑未在 contract 中展开，按现有 spec 保留
-- Blockers：无法从当前工作区确认 git 状态；无法执行 Solidity 编译/测试
-- 假设：`observedOut` 由上游 reactive runtime 传入；本模块只做状态机与运行时约束
-- 风险：未完成合约测试验证，接口变更的下游集成仍需确认
+- TODO：出场后的结算 / 记账语义仍未在当前 contract 中展开
+- 非模块 blocker：Wave 级 upstream-to-contract 映射与 downstream consumer 证明不在本线程范围内
+- 环境告警：Foundry 的全局 signature cache / etherscan config 写入受沙箱限制，但不影响本地编译和测试通过
 
 ## F. 可交付结论
-- 状态：PASS_WITH_NOTES
-- 进入线程间对接：可以
+- 状态：`PASS_WITH_NOTES`
+- 进入线程间对接：`可以`
+- 结论说明：本线程自己的 canonical evidence 冲突已消除，且已有可复跑 compile/test 证据

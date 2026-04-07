@@ -1,270 +1,265 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from datetime import datetime
-from decimal import Decimal, InvalidOperation
-from typing import Any, Callable, Mapping
+from datetime import datetime, timezone
+from decimal import Decimal
+from typing import Any
 
 from backend.data.context_builder.models import (
     CapitalFlow,
-    ExecutionState,
     LiquidityDepth,
     MarketTrend,
     OnchainFlow,
     PositionState,
     RiskState,
+    ExecutionState,
     TrendDirection,
 )
 from backend.data.providers._shared_http_client import (
     ProviderDomainError,
     ProviderRequest,
-    ProviderResponse,
     ProviderUpstreamError,
 )
-from pydantic import ValidationError
 
 
-class _ProviderAdapter:
+class AggregatedMarketFetcher:
+    """聚合市场数据 fetcher，屏蔽底层 provider 差异。
+
+    职责：
+    - 从多个 provider 获取市场趋势和资金流数据
+    - 统一处理失败和降级
+    - 输出趋势/资金流视角，不返回 tick 级数据
+    """
+    
     def __init__(self, primary_provider: Any, fallback_provider: Any | None = None) -> None:
         self._primary = primary_provider
         self._fallback = fallback_provider
-
-    async def _fetch_parsed(
-        self,
-        operation: str,
-        params: Mapping[str, Any],
-        parser: Callable[[Mapping[str, Any]], Any],
+    
+    async def fetch_market_trend(self, pair: str) -> MarketTrend:
+        """获取市场趋势（趋势视角，非 tick）。"""
+        try:
+            trend_data = await self._fetch_from_provider(
+                self._primary, "market_trend", {"pair": pair}
+            )
+            return self._parse_market_trend(trend_data)
+        except (ProviderUpstreamError, ProviderDomainError):
+            if self._fallback is not None:
+                trend_data = await self._fetch_from_provider(
+                    self._fallback, "market_trend", {"pair": pair}
+                )
+                return self._parse_market_trend(trend_data)
+            raise
+    
+    async def fetch_capital_flow(self, pair: str) -> CapitalFlow:
+        """获取资金流数据（资金流视角）。"""
+        try:
+            flow_data = await self._fetch_from_provider(
+                self._primary, "capital_flow", {"pair": pair}
+            )
+            return self._parse_capital_flow(flow_data)
+        except (ProviderUpstreamError, ProviderDomainError):
+            if self._fallback is not None:
+                flow_data = await self._fetch_from_provider(
+                    self._fallback, "capital_flow", {"pair": pair}
+                )
+                return self._parse_capital_flow(flow_data)
+            raise
+    
+    async def _fetch_from_provider(
+        self, provider: Any, operation: str, params: dict[str, Any]
     ) -> Any:
-        primary_error: Exception | None = None
+        """统一 provider 调用封装。"""
+        request = ProviderRequest(operation=operation, params=params)
+        response = await provider.fetch(request)
+        return response.payload
+    
+    def _parse_market_trend(self, data: dict[str, Any]) -> MarketTrend:
+        """解析市场趋势数据。"""
+        _require_fields(data, "market_trend", "direction", "confidence", "timeframe_minutes")
+        direction_str = data["direction"]
+        return MarketTrend(
+            direction=TrendDirection(direction_str),
+            confidence_score=Decimal(str(data["confidence"])),
+            timeframe_minutes=int(data["timeframe_minutes"]),
+        )
+    
+    def _parse_capital_flow(self, data: dict[str, Any]) -> CapitalFlow:
+        """解析资金流数据。"""
+        _require_fields(
+            data,
+            "capital_flow",
+            "net_inflow_usd",
+            "volume_24h_usd",
+            "whale_inflow_usd",
+            "retail_inflow_usd",
+        )
+        return CapitalFlow(
+            net_inflow_usd=Decimal(str(data["net_inflow_usd"])),
+            volume_24h_usd=Decimal(str(data["volume_24h_usd"])),
+            whale_inflow_usd=Decimal(str(data["whale_inflow_usd"])),
+            retail_inflow_usd=Decimal(str(data["retail_inflow_usd"])),
+        )
 
+
+class AggregatedLiquidityFetcher:
+    """聚合流动性数据 fetcher。"""
+    
+    def __init__(self, primary_provider: Any, fallback_provider: Any | None = None) -> None:
+        self._primary = primary_provider
+        self._fallback = fallback_provider
+    
+    async def fetch_liquidity_depth(self, pair: str, dex: str) -> LiquidityDepth:
+        """获取流动性深度。"""
         try:
-            payload = await self._fetch_from_provider(self._primary, operation, params)
-            return parser(payload)
-        except (ProviderDomainError, ProviderUpstreamError, ValidationError, ValueError) as exc:
-            primary_error = exc
+            data = await self._fetch_from_provider(
+                self._primary, "liquidity_depth", {"pair": pair, "dex": dex}
+            )
+            return self._parse_liquidity_depth(pair, dex, data)
+        except ProviderUpstreamError:
+            if self._fallback is not None:
+                data = await self._fetch_from_provider(
+                    self._fallback, "liquidity_depth", {"pair": pair, "dex": dex}
+                )
+                return self._parse_liquidity_depth(pair, dex, data)
+            raise
+    
+    async def _fetch_from_provider(
+        self, provider: Any, operation: str, params: dict[str, Any]
+    ) -> Any:
+        request = ProviderRequest(operation=operation, params=params)
+        response = await provider.fetch(request)
+        return response.payload
+    
+    def _parse_liquidity_depth(
+        self, pair: str, dex: str, data: dict[str, Any]
+    ) -> LiquidityDepth:
+        _require_fields(data, "liquidity_depth", "depth_2pct", "tvl")
+        return LiquidityDepth(
+            pair=pair,
+            dex=dex,
+            depth_usd_2pct=Decimal(str(data["depth_2pct"])),
+            total_tvl_usd=Decimal(str(data["tvl"])),
+        )
 
-        if self._fallback is None:
-            raise primary_error
 
+class AggregatedOnchainFetcher:
+    """聚合链上数据 fetcher。"""
+    
+    def __init__(self, rpc_provider: Any) -> None:
+        self._rpc = rpc_provider
+    
+    async def fetch_onchain_flow(self) -> OnchainFlow:
+        """获取链上流数据。"""
+        request = ProviderRequest(
+            operation="onchain_flow",
+            params={},
+        )
         try:
-            payload = await self._fetch_from_provider(self._fallback, operation, params)
-            return parser(payload)
-        except (ProviderDomainError, ProviderUpstreamError, ValidationError, ValueError) as exc:
-            raise ProviderDomainError(
-                f"All providers failed for {operation}"
-            ) from exc
+            response = await self._rpc.fetch(request)
+            return self._parse_onchain_flow(response.payload)
+        except ProviderUpstreamError as exc:
+            raise ProviderDomainError("Failed to fetch onchain flow from RPC") from exc
+
+    def _parse_onchain_flow(self, data: dict[str, Any]) -> OnchainFlow:
+        _require_fields(
+            data,
+            "onchain_flow",
+            "active_address_delta_24h",
+            "transaction_count_24h",
+            "gas_price_gwei",
+        )
+        return OnchainFlow(
+            active_address_delta_24h=int(data["active_address_delta_24h"]),
+            transaction_count_24h=int(data["transaction_count_24h"]),
+            gas_price_gwei=Decimal(str(data["gas_price_gwei"])),
+        )
+
+
+class AggregatedRiskFetcher:
+    """聚合风险数据 fetcher。"""
+    
+    def __init__(self, primary_provider: Any) -> None:
+        self._primary = primary_provider
+    
+    async def fetch_risk_state(self, pair: str) -> RiskState:
+        """获取风险状态。"""
+        data = await self._fetch_from_provider(self._primary, "risk_state", {"pair": pair})
+        return self._parse_risk_state(data)
 
     async def _fetch_from_provider(
-        self,
-        provider: Any,
-        operation: str,
-        params: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        response = await provider.fetch(ProviderRequest(operation=operation, params=params))
-        return _require_mapping_payload(response, operation)
+        self, provider: Any, operation: str, params: dict[str, Any]
+    ) -> Any:
+        request = ProviderRequest(operation=operation, params=params)
+        response = await provider.fetch(request)
+        return response.payload
 
-
-class AggregatedMarketFetcher(_ProviderAdapter):
-    async def fetch_market_trend(self, pair: str) -> MarketTrend:
-        return await self._fetch_parsed(
-            "market_trend",
-            {"pair": pair},
-            self._parse_market_trend,
-        )
-
-    async def fetch_capital_flow(self, pair: str) -> CapitalFlow:
-        return await self._fetch_parsed(
-            "capital_flow",
-            {"pair": pair},
-            self._parse_capital_flow,
-        )
-
-    def _parse_market_trend(self, payload: Mapping[str, Any]) -> MarketTrend:
-        return MarketTrend(
-            direction=TrendDirection(_require_str(payload, "direction", "market_trend")),
-            confidence_score=_require_decimal(payload, "confidence", "market_trend"),
-            timeframe_minutes=_require_int(payload, "timeframe_minutes", "market_trend"),
-            **_aggregated_at_kwargs(payload),
-        )
-
-    def _parse_capital_flow(self, payload: Mapping[str, Any]) -> CapitalFlow:
-        return CapitalFlow(
-            net_inflow_usd=_require_decimal(payload, "net_inflow_usd", "capital_flow"),
-            volume_24h_usd=_require_decimal(payload, "volume_24h_usd", "capital_flow"),
-            whale_inflow_usd=_require_decimal(payload, "whale_inflow_usd", "capital_flow"),
-            retail_inflow_usd=_require_decimal(payload, "retail_inflow_usd", "capital_flow"),
-            **_aggregated_at_kwargs(payload),
-        )
-
-
-class AggregatedLiquidityFetcher(_ProviderAdapter):
-    async def fetch_liquidity_depth(self, pair: str, dex: str) -> LiquidityDepth:
-        return await self._fetch_parsed(
-            "liquidity_depth",
-            {"pair": pair, "dex": dex},
-            lambda payload: LiquidityDepth(
-                pair=pair,
-                dex=dex,
-                depth_usd_2pct=_require_decimal(payload, "depth_2pct", "liquidity_depth"),
-                total_tvl_usd=_require_decimal(payload, "tvl", "liquidity_depth"),
-                **_aggregated_at_kwargs(payload),
-            ),
-        )
-
-
-class AggregatedOnchainFetcher(_ProviderAdapter):
-    async def fetch_onchain_flow(self) -> OnchainFlow:
-        try:
-            return await self._fetch_parsed(
-                "onchain_flow",
-                {},
-                lambda payload: OnchainFlow(
-                    active_address_delta_24h=_require_int(
-                        payload, "active_address_delta_24h", "onchain_flow"
-                    ),
-                    transaction_count_24h=_require_int(
-                        payload, "transaction_count_24h", "onchain_flow"
-                    ),
-                    gas_price_gwei=_require_decimal(payload, "gas_price_gwei", "onchain_flow"),
-                    **_aggregated_at_kwargs(payload),
-                ),
-            )
-        except (ProviderDomainError, ProviderUpstreamError) as exc:
-            raise ProviderDomainError("Failed to fetch onchain flow data") from exc
-
-
-class AggregatedRiskFetcher(_ProviderAdapter):
-    async def fetch_risk_state(self, pair: str) -> RiskState:
-        return await self._fetch_parsed(
+    def _parse_risk_state(self, data: dict[str, Any]) -> RiskState:
+        _require_fields(
+            data,
             "risk_state",
-            {"pair": pair},
-            lambda payload: RiskState(
-                volatility_annualized=_require_decimal(
-                    payload, "volatility_annualized", "risk_state"
-                ),
-                var_95_usd=_require_decimal(payload, "var_95_usd", "risk_state"),
-                correlation_to_market=_require_decimal(
-                    payload, "correlation_to_market", "risk_state"
-                ),
-                **_aggregated_at_kwargs(payload),
-            ),
+            "volatility_annualized",
+            "var_95_usd",
+            "correlation_to_market",
+        )
+        return RiskState(
+            volatility_annualized=Decimal(str(data["volatility_annualized"])),
+            var_95_usd=Decimal(str(data["var_95_usd"])),
+            correlation_to_market=Decimal(str(data["correlation_to_market"])),
         )
 
 
-class AggregatedPositionFetcher(_ProviderAdapter):
+class AggregatedPositionFetcher:
+    """聚合仓位数据 fetcher。"""
+    
+    def __init__(self, rpc_provider: Any) -> None:
+        self._rpc = rpc_provider
+    
     async def fetch_position_state(self, pair: str) -> PositionState:
-        return await self._fetch_parsed(
-            "position_state",
-            {"pair": pair},
-            lambda payload: PositionState(
-                current_position_usd=_require_decimal(
-                    payload, "current_position_usd", "position_state"
-                ),
-                unrealized_pnl_usd=_require_decimal(
-                    payload, "unrealized_pnl_usd", "position_state"
-                ),
-                entry_price_usd=_optional_decimal(payload, "entry_price_usd", "position_state"),
-                position_opened_at=_optional_datetime(payload, "position_opened_at"),
-                **_aggregated_at_kwargs(payload),
+        """获取仓位状态。"""
+        request = ProviderRequest(operation="position_state", params={"pair": pair})
+        response = await self._rpc.fetch(request)
+        return self._parse_position_state(response.payload)
+
+    def _parse_position_state(self, data: dict[str, Any]) -> PositionState:
+        _require_fields(data, "position_state", "current_position_usd", "unrealized_pnl_usd")
+        return PositionState(
+            current_position_usd=Decimal(str(data["current_position_usd"])),
+            unrealized_pnl_usd=Decimal(str(data["unrealized_pnl_usd"])),
+            entry_price_usd=(
+                Decimal(str(data["entry_price_usd"])) if "entry_price_usd" in data else None
             ),
         )
 
 
-class AggregatedExecutionFetcher(_ProviderAdapter):
+class AggregatedExecutionFetcher:
+    """聚合执行状态 fetcher。"""
+
+    def __init__(self, provider: Any) -> None:
+        if provider is None:
+            raise ValueError("Execution state provider is required")
+
+        self._provider = provider
+
     async def fetch_execution_state(self) -> ExecutionState:
-        return await self._fetch_parsed(
-            "execution_state",
-            {},
-            lambda payload: ExecutionState(
-                daily_trades_executed=_require_int(
-                    payload, "daily_trades_executed", "execution_state"
-                ),
-                daily_volume_usd=_require_decimal(
-                    payload, "daily_volume_usd", "execution_state"
-                ),
-                last_execution_at=_optional_datetime(payload, "last_execution_at"),
-                **_aggregated_at_kwargs(payload),
-            ),
-        )
-
-
-def _require_mapping_payload(
-    response: ProviderResponse,
-    operation: str,
-) -> Mapping[str, Any]:
-    payload = response.payload
-    if not isinstance(payload, Mapping):
-        raise ProviderDomainError(
-            f"{response.provider} returned non-mapping payload for {operation}"
-        )
-    return payload
-
-
-def _require_field(payload: Mapping[str, Any], field: str, operation: str) -> Any:
-    if field not in payload:
-        raise ProviderDomainError(
-            f"Missing required field {field} in {operation} payload"
-        )
-    return payload[field]
-
-
-def _require_decimal(payload: Mapping[str, Any], field: str, operation: str) -> Decimal:
-    raw_value = _require_field(payload, field, operation)
-    try:
-        return Decimal(str(raw_value))
-    except (InvalidOperation, ValueError, TypeError) as exc:
-        raise ProviderDomainError(
-            f"Invalid decimal field {field} in {operation} payload"
-        ) from exc
-
-
-def _require_int(payload: Mapping[str, Any], field: str, operation: str) -> int:
-    raw_value = _require_field(payload, field, operation)
-    try:
-        return int(raw_value)
-    except (ValueError, TypeError) as exc:
-        raise ProviderDomainError(
-            f"Invalid integer field {field} in {operation} payload"
-        ) from exc
-
-
-def _require_str(payload: Mapping[str, Any], field: str, operation: str) -> str:
-    raw_value = _require_field(payload, field, operation)
-    if not isinstance(raw_value, str) or raw_value == "":
-        raise ProviderDomainError(
-            f"Invalid string field {field} in {operation} payload"
-        )
-    return raw_value
-
-
-def _optional_decimal(
-    payload: Mapping[str, Any],
-    field: str,
-    operation: str,
-) -> Decimal | None:
-    if field not in payload or payload[field] is None:
-        return None
-    return _require_decimal(payload, field, operation)
-
-
-def _optional_datetime(payload: Mapping[str, Any], field: str) -> datetime | None:
-    if field not in payload or payload[field] is None:
-        return None
-
-    raw_value = payload[field]
-    if isinstance(raw_value, datetime):
-        return raw_value
-
-    if isinstance(raw_value, str):
+        """获取今日执行状态。"""
+        request = ProviderRequest(operation="execution_state", params={})
         try:
-            return datetime.fromisoformat(raw_value.replace("Z", "+00:00"))
-        except ValueError as exc:
-            raise ProviderDomainError(f"Invalid datetime field {field}") from exc
+            response = await self._provider.fetch(request)
+        except ProviderUpstreamError as exc:
+            raise ProviderDomainError("Failed to fetch execution state") from exc
 
-    raise ProviderDomainError(f"Invalid datetime field {field}")
+        return self._parse_execution_state(response.payload)
+
+    def _parse_execution_state(self, data: dict[str, Any]) -> ExecutionState:
+        _require_fields(data, "execution_state", "daily_trades_executed", "daily_volume_usd")
+        return ExecutionState(
+            daily_trades_executed=int(data["daily_trades_executed"]),
+            daily_volume_usd=Decimal(str(data["daily_volume_usd"])),
+        )
 
 
-def _aggregated_at_kwargs(payload: Mapping[str, Any]) -> dict[str, datetime]:
-    aggregated_at = _optional_datetime(payload, "aggregated_at")
-    if aggregated_at is None:
-        return {}
-    return {"aggregated_at": aggregated_at}
+def _require_fields(data: dict[str, Any], payload_name: str, *required_fields: str) -> None:
+    missing = [field for field in required_fields if field not in data]
+    if missing:
+        raise ProviderDomainError(
+            f"{payload_name} payload is missing required fields: {', '.join(sorted(missing))}"
+        )

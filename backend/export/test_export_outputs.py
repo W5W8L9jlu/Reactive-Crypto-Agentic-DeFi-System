@@ -3,9 +3,19 @@ import os
 import re
 import sys
 import unittest
+from decimal import Decimal
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 sys.path.insert(0, os.path.dirname(__file__))
 
+from backend.execution.compiler import compile_execution_plan, freeze_contract_call_inputs
+from backend.execution.compiler.models import ChainStateSnapshot, CompilationContext, RegistrationContext
+from backend.strategy.models import BpsRange, StrategyIntent, StrategyTemplate, TradeIntent
+from backend.strategy.strategy_boundary_service import StrategyBoundaryService
+from backend.validation import validate_inputs_or_raise
+from backend.validation.models import ExecutionPlan
 from export_outputs import (
     DecisionArtifact,
     ExecutionRecord,
@@ -58,6 +68,120 @@ def _resolve_pointer(document, pointer):
 
 
 class ExportOutputsTestCase(unittest.TestCase):
+    def test_export_outputs_accepts_canonical_wave1_happy_path_artifacts(self):
+        strategy_template = StrategyTemplate(
+            template_id="tpl-eth-swing",
+            version=1,
+            auto_allowed_pairs=frozenset({"ETH/USDC"}),
+            manual_allowed_pairs=frozenset({"WBTC/USDC"}),
+            auto_allowed_dexes=frozenset({"uniswap_v3"}),
+            manual_allowed_dexes=frozenset({"curve"}),
+            auto_max_position_usd=Decimal("5000"),
+            hard_max_position_usd=Decimal("10000"),
+            auto_max_slippage_bps=30,
+            hard_max_slippage_bps=80,
+            auto_stop_loss_bps_range=BpsRange(min_bps=50, max_bps=200),
+            manual_stop_loss_bps_range=BpsRange(min_bps=10, max_bps=400),
+            auto_take_profit_bps_range=BpsRange(min_bps=100, max_bps=500),
+            manual_take_profit_bps_range=BpsRange(min_bps=50, max_bps=1000),
+            auto_daily_trade_limit=2,
+            hard_daily_trade_limit=8,
+            execution_mode="conditional",
+        )
+        strategy_intent = StrategyIntent(
+            strategy_intent_id="si-001",
+            template_id="tpl-eth-swing",
+            template_version=1,
+            execution_mode="conditional",
+            projected_daily_trade_count=1,
+        )
+        trade_intent = TradeIntent(
+            trade_intent_id="ti-001",
+            strategy_intent_id="si-001",
+            pair="ETH/USDC",
+            dex="uniswap_v3",
+            position_usd=Decimal("1200"),
+            max_slippage_bps=20,
+            stop_loss_bps=90,
+            take_profit_bps=250,
+            entry_conditions=["price_below:3000"],
+            ttl_seconds=3600,
+        )
+        boundary_result = StrategyBoundaryService([strategy_template]).evaluate(strategy_intent, trade_intent)
+        execution_plan_model = compile_execution_plan(
+            CompilationContext(
+                strategy_intent=strategy_intent,
+                trade_intent=trade_intent,
+                chain_state=ChainStateSnapshot(
+                    base_fee_gwei=20,
+                    max_priority_fee_gwei=2,
+                    block_number=20_000_000,
+                    block_timestamp=1_710_000_000,
+                    input_token_decimals=6,
+                    output_token_decimals=18,
+                    input_output_price=Decimal("0.0005"),
+                    input_token_usd_price=Decimal("1"),
+                ),
+                registration_context=RegistrationContext(
+                    intent_id="0x" + "1" * 64,
+                    owner="0x0000000000000000000000000000000000000001",
+                    input_token="0x0000000000000000000000000000000000000002",
+                    output_token="0x0000000000000000000000000000000000000003",
+                ),
+            )
+        )
+        execution_plan = ExecutionPlan.model_validate(execution_plan_model.model_dump(mode="python", by_alias=True))
+        validation_result = validate_inputs_or_raise(
+            strategy_template=strategy_template.model_dump(mode="python"),
+            strategy_intent=strategy_intent.model_dump(mode="python"),
+            trade_intent=trade_intent.model_dump(mode="python"),
+            execution_plan=execution_plan.model_dump(mode="python"),
+        )
+
+        outputs = export_outputs(
+            decision_artifact=DecisionArtifact.model_validate(
+                {
+                    "boundary_result": boundary_result.model_dump(mode="python"),
+                    "validation_result": validation_result.model_dump(mode="python"),
+                }
+            ),
+            execution_record=ExecutionRecord.model_validate(
+                {
+                    "execution_plan": execution_plan.model_dump(mode="python"),
+                    "contract_call_inputs": freeze_contract_call_inputs(execution_plan_model).model_dump(
+                        mode="python",
+                        by_alias=True,
+                    ),
+                    "status": "validated",
+                }
+            ),
+        )
+
+        machine_truth_doc = json.loads(outputs.machine_truth_json)
+
+        self.assertEqual(
+            machine_truth_doc["decision_artifact"]["validation_result"]["validated_objects"],
+            ["StrategyTemplate", "StrategyIntent", "TradeIntent", "ExecutionPlan"],
+        )
+        self.assertEqual(
+            machine_truth_doc["execution_record"]["execution_plan"]["hard_constraints"]["ttl_seconds"],
+            3540,
+        )
+        self.assertEqual(
+            machine_truth_doc["execution_record"]["contract_call_inputs"],
+            {
+                "intentId": "0x" + "1" * 64,
+                "intent": {
+                    "owner": "0x0000000000000000000000000000000000000001",
+                    "inputToken": "0x0000000000000000000000000000000000000002",
+                    "outputToken": "0x0000000000000000000000000000000000000003",
+                    "plannedEntrySize": 1200000000,
+                    "entryMinOut": 599400000000000000,
+                    "exitMinOutFloor": 594005400000000000,
+                },
+            },
+        )
+
     def test_audit_excerpt_is_1_to_1_traceable_to_machine_truth_json(self):
         decision_artifact = DecisionArtifact.model_validate(
             {

@@ -102,6 +102,15 @@ class RuleEvaluationTrace(BaseModel):
     note: str
 
 
+class ContractBindingHint(BaseModel):
+    source_field: str
+    target_field: str
+    binding_kind: Literal["identity", "compiler_derived", "runtime_derived"]
+    unit: Literal["identity", "usd_notional", "bps", "seconds"]
+    owner: Literal["strategy_boundary_service", "validation_engine", "execution_compiler", "reactive_runtime"]
+    note: str
+
+
 class BoundaryDecisionResult(BaseModel):
     strategy_intent_id: str
     trade_intent_id: str
@@ -109,4 +118,5 @@ class BoundaryDecisionResult(BaseModel):
     template_version: int
     boundary_decision: BoundaryDecision
     trace: list[RuleEvaluationTrace]
+    contract_binding_hints: tuple[ContractBindingHint, ...] = ()
     decided_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))

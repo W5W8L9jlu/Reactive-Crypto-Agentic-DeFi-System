@@ -68,6 +68,9 @@ def test_auto_register_for_in_template_trade() -> None:
 
     assert result.boundary_decision == BoundaryDecision.AUTO_REGISTER
     assert any(item.rule_name == "template_version_boundary" for item in result.trace)
+    assert result.contract_binding_hints[0].target_field == "investment_intent.plannedEntrySize"
+    assert result.contract_binding_hints[1].unit == "bps"
+    assert result.contract_binding_hints[-1].target_field == "execution_plan.hard_constraints.ttl_seconds"
 
 
 def test_manual_approval_for_outside_auto_but_inside_manual_boundary() -> None:

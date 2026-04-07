@@ -1,6 +1,6 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from backend.data.fetchers.aggregated_fetchers import (
+from .aggregated_fetchers import (
     AggregatedExecutionFetcher,
     AggregatedLiquidityFetcher,
     AggregatedMarketFetcher,

@@ -7,6 +7,7 @@ from .errors import (
 from .models import (
     BoundaryDecision,
     BoundaryDecisionResult,
+    ContractBindingHint,
     RuleDecision,
     RuleEvaluationTrace,
     StrategyIntent,
@@ -27,5 +28,6 @@ __all__ = [
     "BoundaryDecision",
     "RuleDecision",
     "RuleEvaluationTrace",
+    "ContractBindingHint",
     "BoundaryDecisionResult",
 ]

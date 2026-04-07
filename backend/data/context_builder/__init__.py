@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from backend.data.context_builder.builder import (
     ContextBuilderError,
@@ -26,6 +26,7 @@ from backend.data.context_builder.models import (
 )
 
 __all__ = [
+    # Models
     "CapitalFlow",
     "DecisionContext",
     "ExecutionState",
@@ -36,10 +37,12 @@ __all__ = [
     "RiskState",
     "StrategyConstraints",
     "TrendDirection",
+    # Builder
     "DecisionContextBuilder",
     "ContextBuilderError",
     "ProviderDataUnavailableError",
     "DataQualityError",
+    # Protocols
     "MarketDataFetcher",
     "LiquidityFetcher",
     "OnchainFetcher",

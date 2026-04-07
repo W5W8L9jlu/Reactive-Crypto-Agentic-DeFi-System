@@ -6,6 +6,7 @@ from .errors import IntentLinkError, MissingBoundaryRuleError, TemplateNotFoundE
 from .models import (
     BoundaryDecision,
     BoundaryDecisionResult,
+    ContractBindingHint,
     RuleDecision,
     RuleEvaluationTrace,
     StrategyIntent,
@@ -132,6 +133,52 @@ class StrategyBoundaryService:
             template_version=int(template.version),
             boundary_decision=boundary_decision,
             trace=traces,
+            contract_binding_hints=self._build_contract_binding_hints(),
+        )
+
+    @staticmethod
+    def _build_contract_binding_hints() -> tuple[ContractBindingHint, ...]:
+        return (
+            ContractBindingHint(
+                source_field="trade_intent.position_usd",
+                target_field="investment_intent.plannedEntrySize",
+                binding_kind="compiler_derived",
+                unit="usd_notional",
+                owner="execution_compiler",
+                note="Execution compiler must derive plannedEntrySize from position_usd at registration time.",
+            ),
+            ContractBindingHint(
+                source_field="trade_intent.max_slippage_bps",
+                target_field="investment_intent.entryMinOut",
+                binding_kind="compiler_derived",
+                unit="bps",
+                owner="execution_compiler",
+                note="Execution compiler must derive entryMinOut from registration-time quotes plus max_slippage_bps.",
+            ),
+            ContractBindingHint(
+                source_field="trade_intent.stop_loss_bps",
+                target_field="runtime_exit_policy.stop_loss_bps",
+                binding_kind="runtime_derived",
+                unit="bps",
+                owner="reactive_runtime",
+                note="Runtime exit policy must consume stop_loss_bps without moving execution decisions into this module.",
+            ),
+            ContractBindingHint(
+                source_field="trade_intent.take_profit_bps",
+                target_field="runtime_exit_policy.take_profit_bps",
+                binding_kind="runtime_derived",
+                unit="bps",
+                owner="reactive_runtime",
+                note="Runtime exit policy must consume take_profit_bps without moving execution decisions into this module.",
+            ),
+            ContractBindingHint(
+                source_field="trade_intent.ttl_seconds",
+                target_field="execution_plan.hard_constraints.ttl_seconds",
+                binding_kind="compiler_derived",
+                unit="seconds",
+                owner="execution_compiler",
+                note="TTL stays in seconds and must be enforced by the registration-time execution plan.",
+            ),
         )
 
     @staticmethod

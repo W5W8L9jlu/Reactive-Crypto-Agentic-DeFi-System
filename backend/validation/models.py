@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, ValidationError, model_validator
 
+from backend.execution.compiler.models import RegisterPayload
 from backend.strategy.models import StrategyIntent, StrategyTemplate, TradeIntent
 
 
@@ -20,8 +22,10 @@ class ExecutionPlan(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     trade_intent_id: str
-    register_payload: dict[str, Any] = Field(min_length=1)
+    register_payload: RegisterPayload
     hard_constraints: ExecutionHardConstraints
+    compiled_at: datetime | None = None
+    compiler_version: str | None = None
 
 
 class ValidationIssue(BaseModel):
@@ -32,12 +36,21 @@ class ValidationIssue(BaseModel):
     field_path: str | None = None
 
 
+class ContractBinding(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_field: str
+    target_field: str
+    unit: str
+
+
 class ValidationResult(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     is_valid: bool
     validated_objects: tuple[str, ...]
     issues: tuple[ValidationIssue, ...] = ()
+    contract_bindings: tuple[ContractBinding, ...] = ()
 
     @model_validator(mode="after")
     def validate_issue_consistency(self) -> "ValidationResult":
@@ -45,6 +58,8 @@ class ValidationResult(BaseModel):
             raise ValueError("issues must be empty when is_valid=True")
         if not self.is_valid and not self.issues:
             raise ValueError("issues must not be empty when is_valid=False")
+        if not self.is_valid and self.contract_bindings:
+            raise ValueError("contract_bindings must be empty when is_valid=False")
         return self
 
     @classmethod

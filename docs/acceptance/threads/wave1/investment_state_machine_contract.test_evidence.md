@@ -1,13 +1,17 @@
 # 线程测试证据
 
+> Canonical source for `investment_state_machine_contract` verification evidence.
+> Duplicate file `investment_state_machine_contract_test_evidence.md` is retired and must not diverge from this record.
+
 ## 测试目标
 - 验证状态机只能按 `PendingEntry -> ActivePosition -> Closed` 流转
-- 验证 `PendingEntry` 入场 require、`ActivePosition` 出场 `minOut` 约束、`Closed` 重入拒绝
+- 验证 `Closed` 状态不能再次触发
+- 验证 entry / exit 运行时约束分别生效，且 entry 成功后会记录 `actualPositionSize`
 
 ## 覆盖的场景
-- happy path：not verified yet
-- failure path：not verified yet
-- edge case：not verified yet
+- happy path：注册后从 `PendingEntry` 进入 `ActivePosition`，再进入 `Closed`
+- failure path：`EntryConstraintViolation`、`ExitConstraintViolation`、`RuntimeExitMinOutTooLow`、`ClosedIntentCannotExecute`
+- edge case：初始状态必须为 `PendingEntry`，`actualPositionSize` 在入场后必须被持久化
 
 ## 输入
 ```json
@@ -26,32 +30,44 @@
 }
 ```
 
-## 输出
+## 断言输出
 ```json
 {
-  "status": "not verified yet",
-  "events": [
-    "InvestmentIntentRegistered",
-    "InvestmentStateAdvanced"
-  ]
+  "tests": [
+    "testRegisterStartsInPendingEntry",
+    "testEntryTriggerAdvancesToActiveAndRecordsActualSize",
+    "testExitTriggerAdvancesActiveToClosed",
+    "testClosedIntentCannotRetrigger",
+    "testEntryConstraintViolationReverts",
+    "testExitConstraintViolationRevertsWhenObservedOutBelowRuntimeMin",
+    "testRuntimeExitMinOutBelowFloorReverts"
+  ],
+  "status": "7 passed, 0 failed, 0 skipped"
 }
 ```
 
 ## 命令
 ```bash
-git -C D:/reactive-crypto-agentic-DeFi-system rev-parse --is-inside-work-tree
-git -C D:/reactive-crypto-agentic-DeFi-system diff --name-only HEAD
-git -C D:/reactive-crypto-agentic-DeFi-system log --oneline -n 10
-Get-ChildItem -Path D:/reactive-crypto-agentic-DeFi-system/backend -Recurse -File | Where-Object { $_.Extension -eq '.sol' }
-Get-Content D:/reactive-crypto-agentic-DeFi-system/backend/contracts/interfaces/IReactiveInvestmentCompiler.sol
-Get-Content D:/reactive-crypto-agentic-DeFi-system/backend/contracts/core/ReactiveInvestmentCompiler.sol
-solc --version
+git branch --show-current
+git rev-parse --short HEAD
+D:\Foundry\bin\forge.exe build --root . --contracts backend/contracts
+$env:FOUNDRY_CACHE_PATH='D:/reactive-crypto-agentic-DeFi-system/.foundry-cache'; D:\Foundry\bin\forge.exe test --root . --contracts backend/contracts --match-path 'backend/contracts/test/ReactiveInvestmentCompiler.t.sol' -vv
 ```
 
 ## 实际结果
-- 通过：not verified yet
-- 失败：`git` commands reported `not a git repository`; `solc --version` failed because `solc` is not installed
-- 未覆盖：Solidity 编译、合约测试、链上回执
+- `git branch --show-current` -> `w1-gate-fail-fix`
+- `git rev-parse --short HEAD` -> `c5afba2`
+- `forge build --root . --contracts backend/contracts` -> `Compiler run successful!`
+- `forge test --root . --contracts backend/contracts --match-path 'backend/contracts/test/ReactiveInvestmentCompiler.t.sol' -vv` -> `Ran 7 tests ... 7 passed; 0 failed; 0 skipped`
 
-## 备注
-- 当前工作区没有可识别的 git 仓库，且未安装 `solc`，因此没有实际测试输出可回填
+## 已验证的 invariant
+- `PendingEntry -> ActivePosition -> Closed` 是唯一被测试覆盖的状态流转
+- `Closed` 再次触发会以 `ClosedIntentCannotExecute` revert
+- entry 约束与 exit 约束是分开的，分别以 `EntryConstraintViolation` / `ExitConstraintViolation` / `RuntimeExitMinOutTooLow` 表达
+- 入场成功后会记录并保留 `actualPositionSize`
+- 当前模块没有实现链下信号后再执行的混合决策路径
+
+## 环境限制与非阻塞告警
+- `forge` 运行时会打印全局 signature cache / etherscan 配置告警，因为沙箱无法写入 `C:\Users\CodexSandboxOffline\.foundry\cache`
+- 上述告警不影响本模块的编译和 7 个本地测试用例通过
+- 当前证据仍不包含链上部署回执、外部消费者集成、或 Wave 级 happy path

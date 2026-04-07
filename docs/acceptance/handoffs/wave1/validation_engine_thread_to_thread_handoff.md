@@ -1,58 +1,48 @@
-# 线程间对接单
+# Thread Handoff: validation_engine
 
-- 上游线程：validation_engine
-- 下游线程：not verified yet
-- Wave：wave_1
-- handoff 日期：2026-03-31
-- 上游 commit：not verified yet
+- Upstream thread: `validation_engine`
+- Downstream consumer status: `execution_plan seam frozen; compiler layer still pending`
+- Wave: `W1`
+- Branch / HEAD observed: `w1-gate-fail-fix` @ `c5afba2`
 
-## 1. 上游已经稳定的东西
-- 接口：`validate_inputs(...)`、`validate_inputs_or_raise(...)`
-- 对象：`ExecutionPlan`、`ExecutionHardConstraints`、`ValidationIssue`、`ValidationResult`
-- 枚举：none added
-- 命令：`python -m unittest backend.validation.test_validation_engine`
-- 文件路径：`backend/validation/`
+## Stable interfaces
 
-## 2. 下游必须按此消费
-### 输入对象
-```json
-{
-  "strategy_template": "StrategyTemplate | dict",
-  "strategy_intent": "StrategyIntent | dict",
-  "trade_intent": "TradeIntent | dict",
-  "execution_plan": "ExecutionPlan | dict | null"
-}
-```
+- Entry points:
+  - `validate_inputs(...)`
+  - `validate_inputs_or_raise(...)`
+- Stable models:
+  - `ExecutionHardConstraints`
+  - `ExecutionPlan`
+  - `ValidationIssue`
+  - `ValidationResult`
+  - `ContractBinding`
 
-### 输出对象
-```json
-{
-  "is_valid": true,
-  "validated_objects": ["StrategyTemplate", "StrategyIntent", "TradeIntent"],
-  "issues": []
-}
-```
+## Contract bindings emitted on success
 
-### 异常模型
-```text
-pydantic.ValidationError
-ValidationEngineDomainError
-MissingValidationSpecError
-```
+| Source field | Target field | Unit |
+| --- | --- | --- |
+| `strategy_template.template_id` | `strategy_intent.template_id` | `identity` |
+| `strategy_template.version` | `strategy_intent.template_version` | `identity` |
+| `strategy_template.execution_mode` | `strategy_intent.execution_mode` | `identity` |
+| `trade_intent.trade_intent_id` | `execution_plan.trade_intent_id` | `identity` |
+| `trade_intent.max_slippage_bps` | `execution_plan.hard_constraints.max_slippage_bps` | `bps` |
+| `trade_intent.ttl_seconds` | `execution_plan.hard_constraints.ttl_seconds` | `seconds` |
+| `trade_intent.stop_loss_bps` | `execution_plan.hard_constraints.stop_loss_bps` | `bps` |
+| `trade_intent.take_profit_bps` | `execution_plan.hard_constraints.take_profit_bps` | `bps` |
 
-## 3. 约束
-- 不允许：把 Validation Engine 改写成 RPC 真相查询器
-- 不允许：在这里做 calldata 编译或审批展示
-- 仅允许：Pydantic v2 强类型解析、字段范围校验、跨字段模型校验、统一结果输出
-- 单位与精度约定：`position_usd` 使用 Decimal；`ttl_seconds` 使用正整数；`bps` 字段使用非负整数
-- 空值 / 默认值约定：`execution_plan` 可选；模板空 allowed list 目前按 TODO 异常处理
+## Constraints for downstream work
 
-## 4. 示例
-- sample request：`StrategyTemplate` + `StrategyIntent` + `TradeIntent` 的结构化字典，且 `pair/dex/template_id/template_version` 一致
-- sample response：`ValidationResult(is_valid=True, validated_objects=(...), issues=())`
-- sample failure：`trade_intent.pair` 不在模板允许范围内时返回/抛出 `value_error` 级别拒绝
+- Do not reinterpret `contract_bindings` as final contract register payloads.
+- Do not add RPC checks in this module.
+- Do not add approval rendering or calldata generation here.
+- Downstream compiler work must keep `ExecutionPlan.hard_constraints` at least as strict as the validated trade intent.
 
-## 5. 未完成项
-- TODO：模板 `allowed_pairs` / `allowed_dexes` 为空时的正式业务规则仍未在 knowledge 中定义
-- 临时 workaround：当前实现显式抛 `MissingValidationSpecError`
-- 风险提示：下游若需要更细的 result schema，需先补充 contract，再扩展模型字段
+## Verification source
+
+- `python -m unittest backend.validation.test_validation_engine`
+  - Result: `6 tests OK`
+
+## Remaining TODOs
+
+- Final `ExecutionPlan -> InvestmentIntent` register payload mapping remains downstream work.
+- Template behavior for empty allowlists remains an explicit documented TODO path.

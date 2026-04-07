@@ -8,7 +8,6 @@ import pytest
 
 from backend.data.context_builder import (
     CapitalFlow,
-    DataQualityError,
     DecisionContext,
     DecisionContextBuilder,
     ExecutionState,
@@ -21,6 +20,7 @@ from backend.data.context_builder import (
     StrategyConstraints,
     TrendDirection,
 )
+from backend.data.context_builder.builder import DataQualityError
 
 
 class MockMarketFetcher:
@@ -111,6 +111,8 @@ def builder() -> DecisionContextBuilder:
 
 
 class TestContextCompleteness:
+    """测试 DecisionContext 完整性。"""
+
     def test_build_returns_complete_context(
         self, builder: DecisionContextBuilder, strategy_constraints: StrategyConstraints
     ) -> None:
@@ -149,12 +151,18 @@ class TestContextCompleteness:
 
 
 class TestProviderFailureHandling:
+    """测试 Provider 失败处理。"""
+
     class FailingMarketFetcher:
         async def fetch_market_trend(self, pair: str) -> MarketTrend:
-            raise Exception("Network timeout")
+            raise RuntimeError("Network timeout")
 
         async def fetch_capital_flow(self, pair: str) -> CapitalFlow:
-            raise Exception("Network timeout")
+            raise RuntimeError("Network timeout")
+
+    class FailingExecutionFetcher:
+        async def fetch_execution_state(self) -> ExecutionState:
+            raise RuntimeError("Execution provider unavailable")
 
     def test_market_fetcher_failure_raises_clear_error(
         self, strategy_constraints: StrategyConstraints
@@ -179,8 +187,33 @@ class TestProviderFailureHandling:
         assert "market trend" in str(exc_info.value).lower()
         assert exc_info.value.__cause__ is not None
 
+    def test_execution_fetcher_failure_raises_clear_error(
+        self, strategy_constraints: StrategyConstraints
+    ) -> None:
+        builder = DecisionContextBuilder(
+            market_fetcher=MockMarketFetcher(),
+            liquidity_fetcher=MockLiquidityFetcher(),
+            onchain_fetcher=MockOnchainFetcher(),
+            risk_fetcher=MockRiskFetcher(),
+            position_fetcher=MockPositionFetcher(),
+            execution_fetcher=self.FailingExecutionFetcher(),
+        )
+
+        with pytest.raises(ProviderDataUnavailableError) as exc_info:
+            asyncio.run(
+                builder.build(
+                    strategy_constraints=strategy_constraints,
+                    context_id="test-fail-002",
+                )
+            )
+
+        assert "execution state" in str(exc_info.value).lower()
+        assert exc_info.value.__cause__ is not None
+
 
 class TestDataQuality:
+    """测试数据质量验证。"""
+
     class InvalidLiquidityFetcher:
         async def fetch_liquidity_depth(self, pair: str, dex: str) -> LiquidityDepth:
             return LiquidityDepth(
@@ -214,6 +247,8 @@ class TestDataQuality:
 
 
 class TestModelValidation:
+    """测试 Pydantic 模型验证。"""
+
     def test_strategy_constraints_validation(self) -> None:
         constraints = StrategyConstraints(
             pair="ETH/USDC",
@@ -225,6 +260,7 @@ class TestModelValidation:
             ttl_seconds=3600,
             daily_trade_limit=10,
         )
+
         assert constraints.max_position_usd == Decimal("100000")
 
     def test_negative_slippage_rejected(self) -> None:
