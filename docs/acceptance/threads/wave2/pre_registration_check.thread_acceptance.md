@@ -34,7 +34,7 @@
   - 失败快速抛异常：是；`run_pre_registration_check_or_raise` 直接抛显式 domain error。
 - 未完全验证项：
   - 与真实 RPC provider 的接线：`not verified yet`
-  - precheck 输出是否已被 compiler 稳定消费：`not verified yet`
+  - 与编译器的直接适配器 contract：`not verified yet`
 
 ## C. Invariants 检查
 - 执行前检查是否仍然只信 RPC：是
@@ -44,32 +44,32 @@
 - 是否存在静默 fallback：未发现
 
 ## D. 验证证据
-- 已运行命令：
-  - `git diff --name-only HEAD`
-    - 结果：输出包含 `backend/validation/pre_registration_check.py`，同时还有大量与本模块无关的改动
-  - `git log --oneline -n 10`
-    - 结果：当前仅看到 2 条最近提交，均未能从 commit message 直接确认是本模块提交
-  - `git branch --show-current`
-    - 结果：`w1-gate-fail-fix`
-  - `git status --short -- backend/validation/pre_registration_check.py docs/acceptance`
-    - 结果：`backend/validation/pre_registration_check.py` 为修改态；`docs/acceptance/` 下存在大量无关修改/删除
-  - `Get-ChildItem -Recurse -File backend | Where-Object { $_.Name -match 'pre_registration_check|pre-registration-check' } | Select-Object FullName`
-    - 结果：只看到 `backend/validation/pre_registration_check.py` 与其 `__pycache__`，未发现专门测试文件
-  - `python -m py_compile backend/validation/pre_registration_check.py`
-    - 结果：成功，无输出
-  - `@' from backend.validation.pre_registration_check import run_pre_registration_check; print(run_pre_registration_check) '@ | python -`
-    - 结果：失败，导入 `backend.validation.pre_registration_check` 时触发 `ImportError`；根因是 `backend.validation.__init__` 继续导入 `.models`，而当前工作树中的 `backend.execution.compiler.models` 已被 quarantine，缺少 `RegisterPayload`
+- 已运行命令（当前工作区）：
+  - `$env:PYTHONPATH='.'; pytest backend/data/fetchers/test_aggregated_fetchers.py backend/data/context_builder/test_context_builder.py -q`
+    - 结果：`14 passed, 2 warnings`
+  - `python -m unittest backend.execution.compiler.test_execution_compiler -v`
+    - 结果：`2 tests OK`
+  - `python -m unittest backend.validation.test_validation_engine -v`
+    - 结果：`6 tests OK`
+  - `python -m unittest backend.export.test_export_outputs -v`
+    - 结果：`4 tests OK`
+  - `python -m unittest backend.cli.approval.test_approval_flow -v`
+    - 结果：`5 tests OK`
+  - `from backend.validation.pre_registration_check import run_pre_registration_check`
+    - 结果：import smoke `passed`
+  - 内联 Python 顺序调用：
+    - `run_pre_registration_check_or_raise(...)` -> `is_allowed=True`, `remaining_ttl_seconds=540`
+    - `compile_execution_plan(...)` -> `intentId='intent-001'`, `entryValidUntil=1710000540`, `plannedEntrySize=100000000000000000000`
 
 ## E. Known gaps
 - `backend/validation/test_pre_registration_check.py`：`not verified yet`；当前 repo 未发现专门测试文件
-- 通过包路径导入模块的运行时 smoke：失败，受上游导入链阻塞
-- 与 `execution_compiler` 的端到端对接：`not verified yet`
-- `expected_profit_usd`、`max_gas_price_gwei`、`ttl_buffer_seconds` 由哪个上游模块提供：`not verified yet`
+- 与 `execution_compiler` 的直接适配器 contract：`not verified yet`
+- `expected_profit_usd`、`max_gas_price_gwei`、`ttl_buffer_seconds` 的上游权威来源：`not verified yet`
 - `health_factor` 阈值来源与默认策略：`not verified yet`
 
 ## F. 可交付结论
-- 状态：`PARTIAL`
+- 状态：`DELIVERED WITH NOTES`
 - 说明：
-  - 单文件实现与 contract 基本对齐
-  - 语法级检查通过
-  - 当前工作树下的包级运行时导入被上游 `execution_compiler.models` 隔离状态阻塞，因此线程运行时可交付性不能标记为完全通过
+  - 实现与 contract 对齐，import smoke 通过
+  - 中止路径与顺序 `precheck -> compile` 的 happy path 在当前工作区可复现
+  - 仍缺少直连编译器的冻结适配器与专门测试文件

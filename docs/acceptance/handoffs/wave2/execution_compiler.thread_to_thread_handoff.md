@@ -9,38 +9,27 @@
 - 模块相关历史 commit: `1211b50`
 
 ## 1. 上游已经稳定的东西
-- 仅有 schema / error 层在 `HEAD` 中可核实:
-  - `backend/execution/compiler/errors.py`
-  - `backend/execution/compiler/models.py`
-- `HEAD` 中可核实的对象:
-  - `RegisterPayload`
-  - `ExecutionHardConstraints`
-  - `ExecutionPlan`
-  - `ChainStateSnapshot`
-  - `CompilerConfig`
-  - `CompilationContext`
-- `HEAD` 中可核实的错误:
-  - `ExecutionCompilerError`
-  - `CompilationInputError`
-  - `ChainStateError`
-  - `ConstraintViolationError`
-  - `TokenPrecisionError`
-  - `CompilationConfigError`
-- 当前工作树中虽然存在:
-  - `backend/execution/compiler/__init__.py`
-  - `backend/execution/compiler/compiler.py`
-  - `backend/execution/compiler/test_execution_compiler.py`
-  但这三者均为未跟踪 quarantine 文件，不属于稳定 handoff 面。
+- 编译入口与合约输入冻结：
+  - `compile_execution_plan(context: CompilationContext) -> ExecutionPlan`
+  - `freeze_contract_call_inputs(plan: ExecutionPlan) -> ContractRegisterCallInputs`
+- 稳定对象：
+  - `RegisterPayload`、`ExecutionHardConstraints`、`ExecutionPlan`
+  - `ChainStateSnapshot`、`CompilerConfig`、`CompilationContext`、`RegistrationContext`
+- 稳定错误：
+  - `ExecutionCompilerError`、`CompilationInputError`、`ChainStateError`、`ConstraintViolationError`、`TokenPrecisionError`、`CompilationConfigError`
 
 ## 2. 下游必须按此消费
-
-### 输入对象
-`HEAD` 中仅能核实 schema-level 输入，不存在已提交 compile entrypoint：
-
+### 输入对象（CompilationContext）
 ```json
 {
   "strategy_intent": "StrategyIntent",
   "trade_intent": "TradeIntent",
+  "registration_context": {
+    "intent_id": "str",
+    "owner": "str",
+    "input_token": "str",
+    "output_token": "str"
+  },
   "chain_state": {
     "base_fee_gwei": "int >= 0",
     "max_priority_fee_gwei": "int >= 0",
@@ -48,7 +37,8 @@
     "block_timestamp": "int",
     "input_token_decimals": "0..18",
     "output_token_decimals": "0..18",
-    "input_output_price": "Decimal"
+    "input_output_price": "Decimal",
+    "input_token_usd_price": "Decimal"
   },
   "config": {
     "gas_buffer_multiplier": "Decimal > 1",
@@ -59,33 +49,29 @@
 }
 ```
 
-### 输出对象
-`HEAD` 中仅能核实 schema-level 输出，不存在已提交 compile entrypoint：
-
+### 输出对象（ExecutionPlan + 合约输入）
 ```json
 {
   "trade_intent_id": "str",
   "register_payload": {
-    "intent_id": "str",
+    "intentId": "str",
     "owner": "str",
-    "input_token": "str",
-    "output_token": "str",
-    "planned_entry_size": "int",
-    "entry_amount_out_minimum": "int",
-    "entry_valid_until": "int",
-    "max_gas_price_gwei": "int",
-    "stop_loss_slippage_bps": "int",
-    "take_profit_slippage_bps": "int",
-    "exit_min_out_floor": "int"
+    "inputToken": "str",
+    "outputToken": "str",
+    "plannedEntrySize": "int",
+    "entryAmountOutMinimum": "int",
+    "entryValidUntil": "int",
+    "maxGasPriceGwei": "int",
+    "stopLossSlippageBps": "int",
+    "takeProfitSlippageBps": "int",
+    "exitMinOutFloor": "int"
   },
   "hard_constraints": {
     "max_slippage_bps": "int",
     "ttl_seconds": "PositiveInt",
     "stop_loss_bps": "int",
     "take_profit_bps": "int"
-  },
-  "compiled_at": "datetime",
-  "compiler_version": "str"
+  }
 }
 ```
 
@@ -100,14 +86,13 @@ CompilationConfigError
 ```
 
 ## 3. 约束
-- 不允许:
-  - 把当前工作树中的 `compiler.py` / `__init__.py` / `test_execution_compiler.py` 当成稳定交付面
-  - 假设 `HEAD` 已冻结 `compile_execution_plan(...)`
-  - 假设 `HEAD` 已冻结 contract-facing register call input adapter
-  - 假设 `execution_compiler -> reactive_runtime` 已完成真实 handoff
-- 仅允许:
-  - 在明确说明“schema-level only”的前提下消费 `HEAD` 中的 model / error 定义
-  - 继续以 contract / knowledge 中的 registration-time compiler invariants 作为设计约束
+- 不允许：
+  - 在本模块生成 calldata
+  - 将 `DecisionMeta.ttl_seconds` 作为注册到期真相来源
+  - 隐式推断 `registration_context` 与 `chain_state` 字段
+- 仅允许：
+  - 在注册时编译并冻结合约面 inputs
+  - 使用 `freeze_contract_call_inputs(...)` 作为 register 调用适配
 - 单位与精度约定:
   - `entryAmountOutMinimum` / `maxGasPriceGwei` / `entryValidUntil` / `stopLossSlippageBps` / `takeProfitSlippageBps` / `exitMinOutFloor` 的字段名与语义在 `HEAD` 模型注释中可见
   - `input_output_price`、`gas_buffer_multiplier` 使用 `Decimal`
@@ -117,20 +102,14 @@ CompilationConfigError
   - 其余编译 happy path 的缺省行为: `not verified yet`
 
 ## 4. 示例
-- sample request: `not verified yet`
-  - 原因: `HEAD` 中不存在已提交的 compile entrypoint
-- sample response: `not verified yet`
-  - 原因: `HEAD` 中不存在已提交的 compile happy path 输出
-- sample failure:
-  - error class 名称可核实
-  - 实际抛出路径与触发条件: `not verified yet`
+- sample request：已在当前工作区通过内联顺序调用验证（见 W2 gate / exit 证据）
+- sample response：`plan_ok: intent-001 1710000540 100000000000000000000`
+- sample failure：
+  - `ConstraintViolationError` 当 `exitMinOutFloor >= entryAmountOutMinimum`
 
 ## 5. 未完成项
-- TODO:
-  - 提交并冻结活跃的 compile entrypoint
-  - 提交并冻结 contract-facing register payload freeze
-  - 以已提交测试证明 registration-time compile happy path
-  - 执行 `execution_compiler -> reactive_runtime` 真实 handoff
-- 当前风险:
-  - `W2_验收包` 将本模块列为 Wave 2 模块，但 `HEAD` 的 W2 gate / exit / handoff 只把它记为 `schema-compared` seam
-  - 当前工作树包含 quarantine 文件，容易与 `HEAD` 上的稳定面混淆
+- TODO：
+  - 执行 `execution_compiler -> reactive_runtime` 的真实 handoff
+  - 补充跨模块端到端验证路径（非单模块职责）
+- 当前风险：
+  - Gate 仍依赖 dirty 工作树证据，需在干净提交上冻结
