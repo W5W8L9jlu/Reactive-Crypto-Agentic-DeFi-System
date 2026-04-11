@@ -1,0 +1,23 @@
+0 verbose cli D:\node.exe C:\Users\26394\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.6.2
+2 info using node@v22.20.0
+3 silly config load:file:C:\Users\26394\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:D:\.npmrc
+5 silly config load:file:C:\Users\26394\.npmrc
+6 silly config load:file:C:\Users\26394\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm exec skills add https://github.com/aiskillstore/marketplace --skill dammianmiller-cli-design-expert -g -y
+8 verbose argv "exec" "--yes" "--cache" "D:\\reactive-crypto-agentic-DeFi-system\\.npm-cache" "--" "skills" "add" "https://github.com/aiskillstore/marketplace" "--skill" "dammianmiller-cli-design-expert" "-g" "-y"
+9 verbose logfile logs-max:10 dir:D:\reactive-crypto-agentic-DeFi-system\.npm-cache\_logs\2026-04-11T14_14_24_462Z-
+10 verbose logfile D:\reactive-crypto-agentic-DeFi-system\.npm-cache\_logs\2026-04-11T14_14_24_462Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 http fetch GET https://registry.npmmirror.com/skills attempt 1 failed with ECONNRESET
+14 http fetch GET 200 https://registry.npmmirror.com/skills 14179ms (cache revalidated)
+15 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+16 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+17 verbose cwd D:\reactive-crypto-agentic-DeFi-system
+18 verbose os Windows_NT 10.0.26220
+19 verbose node v22.20.0
+20 verbose npm  v11.6.2
+21 verbose exit 1
+22 verbose code 1

@@ -5,7 +5,6 @@ from typing import Callable, Optional, Sequence
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
 
 from .errors import CLISurfaceError, RouteBindingMissingError
 from .views.alerts import (
@@ -14,6 +13,7 @@ from .views.alerts import (
     build_critical_force_close_banner,
     render_alerts_snapshot,
 )
+from .views.surface import CLISurfaceRenderer
 
 
 StrategyCreateHandler = Callable[[], str]
@@ -310,24 +310,17 @@ def _invoke_route_or_exit(console: Console, handler: Callable[..., object], *arg
 
 
 def _print_result(console: Console, route: str, result: object) -> None:
-    message = str(result)
-    console.print(
-        Panel.fit(
-            message,
-            title=f"Route: {route}",
-            border_style="cyan",
-        )
-    )
+    try:
+        CLISurfaceRenderer(console).print_success(route=route, result=result)
+    except CLISurfaceError as exc:
+        _raise_cli_error(console, exc)
 
 
 def _raise_cli_error(console: Console, error: CLISurfaceError) -> None:
-    console.print(
-        Panel.fit(
-            str(error),
-            title="CLI Surface Error",
-            border_style="red",
-        )
-    )
+    try:
+        CLISurfaceRenderer(console).print_error(error)
+    except CLISurfaceError:
+        console.print(str(error))
     raise typer.Exit(code=2)
 
 

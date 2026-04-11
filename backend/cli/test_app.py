@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import unittest
 from datetime import datetime, timezone
+from unittest.mock import patch
 
 from typer.testing import CliRunner
 
@@ -148,6 +150,19 @@ class CLISurfaceRouteTests(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertIn("CRITICAL ALERT", result.stdout)
         self.assertIn("agent-cli execution force-close intent-001", result.stdout)
+
+    def test_valid_theme_from_env_keeps_route_output(self) -> None:
+        with patch.dict(os.environ, {"REACTIVE_CLI_THEME": "minimal"}, clear=False):
+            result = self.runner.invoke(self.app, ["strategy", "create"])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn("Route: strategy.create", result.stdout)
+        self.assertIn("strategy-create-ok", result.stdout)
+
+    def test_invalid_theme_from_env_exits_with_code_2(self) -> None:
+        with patch.dict(os.environ, {"REACTIVE_CLI_THEME": "invalid-theme"}, clear=False):
+            result = self.runner.invoke(self.app, ["strategy", "create"])
+        self.assertEqual(result.exit_code, 2)
+        self.assertIn("REACTIVE_CLI_THEME", result.stdout)
 
 
 if __name__ == "__main__":
