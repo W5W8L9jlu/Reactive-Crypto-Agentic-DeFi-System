@@ -1,47 +1,43 @@
-# 线程测试证据
+# 线程测试证据（更新于 2026-04-09）
 
 ## 测试目标
-- 确认 `emergency_force_close` 所在合约改动未破坏现有状态机主路径。
-- 收集 emergency 专项验证是否已存在的事实证据。
+- 验证 `emergency_force_close` 三项最小验证：
+  - 权限拒绝
+  - 非 `ActivePosition` 拒绝
+  - force-close 后迟滞回调 revert
+- 验证 runtime recommendation -> emergency force-close 映射调用。
 
-## 覆盖场景（本次实际跑到）
-- `ReactiveInvestmentCompiler` 既有 8 个用例全部通过（entry/exit/closed-retrigger/constraint）。
-- 这些用例覆盖普通 reactive 触发主路径与约束回退。
-
-## 命令
+## 执行命令（本次实测）
 ```bash
 forge test --root backend/contracts --contracts backend/contracts/core -vv
+python -m unittest backend.execution.runtime.test_execution_layer backend.execution.runtime.test_web3_contract_gateway_integration -v
 ```
 
-## 输入（命令上下文）
-```json
-{
-  "root": "backend/contracts",
-  "contracts_scope": "backend/contracts/core",
-  "suite": "test/ReactiveInvestmentCompiler.t.sol:ReactiveInvestmentCompilerTest"
-}
-```
-
-## 输出（关键结果）
+## 关键输出
 ```text
-Compiling 3 files with Solc 0.8.33
-Compiler run successful!
-Ran 8 tests for ReactiveInvestmentCompilerTest
-Suite result: ok. 8 passed; 0 failed; 0 skipped
+Suite result: ok. 12 passed; 0 failed; 0 skipped
+Ran 4 tests in 3.184s
+OK
 ```
+
+## 已覆盖用例（与本模块直接相关）
+- `testEmergencyForceCloseOnlyOwnerOrAuthorizedRelayer`
+- `testEmergencyForceCloseRejectsNonActivePosition`
+- `testEmergencyForceCloseClosesBeforeAnyLateCallback`
+- `test_shadow_monitor_recommendation_drives_emergency_force_close`
+- `test_emergency_force_close_moves_active_position_to_closed`
 
 ## 实际结果
-- 命令执行成功，退出码 `0`。
-- 通过用例：`8`
-- 失败用例：`0`
-- 跳过用例：`0`
+- 命令退出码：`0`
+- Forge：`12 passed / 0 failed`
+- Python runtime：`4 passed / 0 failed`
 
-## 与模块 DoD 对照
-- 权限测试（owner/authorized relayer）：`not verified yet`
-- 非 `ActivePosition` 拒绝测试：`not verified yet`
-- force-close 后迟滞回调 revert 测试：`not verified yet`
-- 与 shadow monitor 告警联动测试：`not verified yet`
+## DoD 对照
+- 权限测试（owner/authorized relayer）：`verified`
+- 非 `ActivePosition` 拒绝测试：`verified`
+- force-close 后迟滞回调 revert：`verified`
+- shadow monitor recommendation 映射 force-close：`verified（测试级）`
+- Sepolia 链上 smoke：`not verified yet`
 
 ## 结论
-- 已有回归测试通过，说明现有主路径未被此次改动明显破坏。
-- emergency 专项最小验证未在当前测试集中看到，仍需补齐。
+- 本地测试层证据完整，链上 Testnet 实证仍缺失。

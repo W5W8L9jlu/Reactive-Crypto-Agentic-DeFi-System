@@ -122,7 +122,13 @@ def _render_investment_memo(
     excerpt_count: int,
     memo_brief: str | None,
 ) -> str:
-    memo_note = memo_brief.strip() if memo_brief and memo_brief.strip() else "TODO: 补充投研摘要。"
+    memo_note = memo_brief.strip() if memo_brief and memo_brief.strip() else "本次无额外主观投研补充。"
+    machine_truth_doc = json.loads(machine_truth_json)
+    decision_artifact = machine_truth_doc.get("decision_artifact", {})
+    execution_record = machine_truth_doc.get("execution_record", {})
+    strategy_intent_id = decision_artifact.get("strategy_intent", {}).get("strategy_intent_id", "unknown")
+    trade_intent_id = decision_artifact.get("trade_intent", {}).get("trade_intent_id", "unknown")
+    execution_status = execution_record.get("status", "unknown")
     checksum = hashlib.sha256(machine_truth_json.encode("utf-8")).hexdigest()
     lines = [
         "# Investment Memo",
@@ -134,11 +140,15 @@ def _render_investment_memo(
         "## Traceability Metadata",
         f"- machine_truth_sha256: {checksum}",
         f"- audit_excerpt_items: {excerpt_count}",
+        f"- strategy_intent_id: {strategy_intent_id}",
+        f"- trade_intent_id: {trade_intent_id}",
+        f"- execution_status: {execution_status}",
         "",
-        "## Analyst Notes",
+        "## Investment Thesis",
         memo_note,
         "",
-        "TODO: docs/knowledge/08_delivery/01_export_outputs.md 未定义 Memo 正式模板。",
+        "## Conclusion",
+        "本 Memo 仅用于投研沟通与复盘，任何执行与审计结论以 Machine Truth JSON 为准。",
     ]
     return "\n".join(lines)
 

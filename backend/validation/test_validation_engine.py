@@ -66,7 +66,6 @@ def _valid_payloads():
             "maxGasPriceGwei": 27,
             "stopLossSlippageBps": 90,
             "takeProfitSlippageBps": 250,
-            "exitMinOutFloor": 594005400000000000,
         },
         "hard_constraints": {
             "max_slippage_bps": 10,
@@ -112,7 +111,10 @@ class ValidationEngineTestCase(unittest.TestCase):
                 {"source_field": "execution_plan.register_payload.outputToken", "target_field": "investment_intent.outputToken", "unit": "identity"},
                 {"source_field": "execution_plan.register_payload.plannedEntrySize", "target_field": "investment_intent.plannedEntrySize", "unit": "identity"},
                 {"source_field": "execution_plan.register_payload.entryAmountOutMinimum", "target_field": "investment_intent.entryMinOut", "unit": "identity"},
-                {"source_field": "execution_plan.register_payload.exitMinOutFloor", "target_field": "investment_intent.exitMinOutFloor", "unit": "identity"},
+                {"source_field": "execution_plan.register_payload.entryValidUntil", "target_field": "investment_intent.entryValidUntil", "unit": "seconds"},
+                {"source_field": "execution_plan.register_payload.maxGasPriceGwei", "target_field": "investment_intent.maxGasPriceGwei", "unit": "gwei"},
+                {"source_field": "execution_plan.register_payload.stopLossSlippageBps", "target_field": "investment_intent.stopLossSlippageBps", "unit": "bps"},
+                {"source_field": "execution_plan.register_payload.takeProfitSlippageBps", "target_field": "investment_intent.takeProfitSlippageBps", "unit": "bps"},
             ],
         )
 

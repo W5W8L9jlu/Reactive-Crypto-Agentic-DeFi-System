@@ -17,21 +17,6 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
     uint256 private constant _BPS_DENOMINATOR = 10_000;
     address private immutable _owner;
 
-    error UnauthorizedEmergencyForceCloseCaller(bytes32 intentId, address caller);
-    error EmergencyForceCloseOnlyActivePosition(bytes32 intentId, PositionState currentState);
-    error EmergencySlippageBpsOutOfRange(bytes32 intentId, uint256 maxSlippageBps);
-    error UnauthorizedRelayerConfigCaller(address caller);
-    error ZeroAddressRelayer();
-
-    event EmergencyRelayerAuthorizationUpdated(address indexed relayer, bool authorized);
-    event EmergencyForceCloseExecuted(
-        bytes32 indexed intentId,
-        address indexed caller,
-        uint256 actualPositionSize,
-        uint256 maxSlippageBps,
-        uint256 emergencyExitMinOut
-    );
-
     constructor() {
         _owner = msg.sender;
     }
@@ -53,8 +38,8 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
 
     function executeReactiveTrigger(
         bytes32 intentId,
-        uint256 observedOut,
-        uint256 runtimeExitMinOut
+        ReactiveTriggerType triggerType,
+        uint256 observedOut
     ) external override {
         InvestmentPosition storage position = _positions[intentId];
         if (!position.exists) {
@@ -67,18 +52,27 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
         }
 
         if (currentState == PositionState.PendingEntry) {
+            if (triggerType != ReactiveTriggerType.Entry) {
+                revert InvalidTriggerForState(intentId, triggerType, currentState);
+            }
             _executeEntry(position, intentId, observedOut);
             return;
         }
 
-        _executeExit(position, intentId, observedOut, runtimeExitMinOut);
+        if (triggerType == ReactiveTriggerType.Entry) {
+            revert InvalidTriggerForState(intentId, triggerType, currentState);
+        }
+        if (triggerType != ReactiveTriggerType.StopLoss && triggerType != ReactiveTriggerType.TakeProfit) {
+            revert InvalidTriggerForState(intentId, triggerType, currentState);
+        }
+        _executeExit(position, intentId, triggerType, observedOut);
     }
 
-    function owner() external view returns (address) {
+    function owner() external view override returns (address) {
         return _owner;
     }
 
-    function setEmergencyAuthorizedRelayer(address relayer, bool authorized) external {
+    function setEmergencyAuthorizedRelayer(address relayer, bool authorized) external override {
         if (msg.sender != _owner) {
             revert UnauthorizedRelayerConfigCaller(msg.sender);
         }
@@ -90,11 +84,14 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
         emit EmergencyRelayerAuthorizationUpdated(relayer, authorized);
     }
 
-    function isEmergencyAuthorizedRelayer(address relayer) external view returns (bool) {
+    function isEmergencyAuthorizedRelayer(address relayer) external view override returns (bool) {
         return _authorizedRelayers[relayer];
     }
 
-    function emergencyForceClose(bytes32 intentId, uint256 maxSlippageBps) external returns (uint256 emergencyExitMinOut) {
+    function emergencyForceClose(
+        bytes32 intentId,
+        uint256 maxSlippageBps
+    ) external override returns (uint256 emergencyExitMinOut) {
         InvestmentPosition storage position = _positions[intentId];
         if (!position.exists) {
             revert IntentNotRegistered(intentId);
@@ -130,6 +127,13 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
     }
 
     function _executeEntry(InvestmentPosition storage position, bytes32 intentId, uint256 observedOut) private {
+        if (block.timestamp > position.intent.entryValidUntil) {
+            revert EntryValidityExpired(intentId, block.timestamp, position.intent.entryValidUntil);
+        }
+        uint256 maxGasPriceWei = position.intent.maxGasPriceGwei * 1 gwei;
+        if (tx.gasprice > maxGasPriceWei) {
+            revert MaxGasPriceExceeded(intentId, tx.gasprice, position.intent.maxGasPriceGwei);
+        }
         if (observedOut < position.intent.entryMinOut) {
             revert EntryConstraintViolation(intentId, observedOut, position.intent.entryMinOut);
         }
@@ -147,17 +151,21 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
     function _executeExit(
         InvestmentPosition storage position,
         bytes32 intentId,
-        uint256 observedOut,
-        uint256 runtimeExitMinOut
+        ReactiveTriggerType triggerType,
+        uint256 observedOut
     ) private {
-        if (runtimeExitMinOut < position.intent.exitMinOutFloor) {
-            revert RuntimeExitMinOutTooLow(intentId, runtimeExitMinOut, position.intent.exitMinOutFloor);
-        }
-        if (observedOut < runtimeExitMinOut) {
-            revert ExitConstraintViolation(intentId, observedOut, runtimeExitMinOut);
-        }
         if (position.actualPositionSize == 0) {
             revert ActualPositionSizeNotRecorded(intentId);
+        }
+        uint256 slippageBps = triggerType == ReactiveTriggerType.StopLoss
+            ? position.intent.stopLossSlippageBps
+            : position.intent.takeProfitSlippageBps;
+        if (slippageBps > _BPS_DENOMINATOR) {
+            revert SlippageBpsOutOfRange(intentId, slippageBps);
+        }
+        uint256 derivedExitMinOut = _deriveMinOutFromSlippage(position.actualPositionSize, slippageBps);
+        if (observedOut < derivedExitMinOut) {
+            revert ExitConstraintViolation(intentId, observedOut, derivedExitMinOut);
         }
 
         PositionState fromState = position.state;
@@ -175,7 +183,14 @@ contract ReactiveInvestmentCompiler is IReactiveInvestmentCompiler {
         uint256 actualPositionSize,
         uint256 maxSlippageBps
     ) private pure returns (uint256 emergencyExitMinOut) {
-        return (actualPositionSize * (_BPS_DENOMINATOR - maxSlippageBps)) / _BPS_DENOMINATOR;
+        return _deriveMinOutFromSlippage(actualPositionSize, maxSlippageBps);
+    }
+
+    function _deriveMinOutFromSlippage(
+        uint256 amount,
+        uint256 slippageBps
+    ) private pure returns (uint256 minOut) {
+        return (amount * (_BPS_DENOMINATOR - slippageBps)) / _BPS_DENOMINATOR;
     }
 
     function getPositionState(bytes32 intentId) external view override returns (PositionState) {

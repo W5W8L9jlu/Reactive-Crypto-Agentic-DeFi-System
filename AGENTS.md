@@ -29,3 +29,6 @@
 - 在运行时重新编译 execution plan
 - 让 AI 直接生成最终 calldata
 - 吞掉核心业务异常
+
+## 补充
+- if something you want to find is not defined in current knowledge files,read prd_final_v10.md（"D:\reactive-crypto-agentic-DeFi-system\prd_final_v10.md"）

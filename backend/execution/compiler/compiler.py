@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 
-from .errors import ConstraintViolationError
 from .models import CompilationContext, ContractRegisterCallInputs, ExecutionHardConstraints, ExecutionPlan, RegisterPayload
 
 
@@ -34,10 +33,6 @@ def compile_execution_plan(context: CompilationContext) -> ExecutionPlan:
         output_token_decimals=chain_state.output_token_decimals,
         max_slippage_bps=tightened_max_slippage_bps,
     )
-    exit_min_out_floor = _apply_slippage_bps(
-        amount=entry_amount_out_minimum,
-        slippage_bps=trade_intent.stop_loss_bps,
-    )
     entry_valid_until = int(chain_state.block_timestamp + tightened_ttl_seconds)
     max_gas_price_gwei = _compute_max_gas_price_gwei(
         base_fee_gwei=chain_state.base_fee_gwei,
@@ -57,9 +52,7 @@ def compile_execution_plan(context: CompilationContext) -> ExecutionPlan:
         max_gas_price_gwei=max_gas_price_gwei,
         stop_loss_slippage_bps=trade_intent.stop_loss_bps,
         take_profit_slippage_bps=trade_intent.take_profit_bps,
-        exit_min_out_floor=exit_min_out_floor,
     )
-    _assert_register_payload(register_payload)
 
     return ExecutionPlan(
         trade_intent_id=trade_intent.trade_intent_id,
@@ -113,14 +106,3 @@ def _compute_max_gas_price_gwei(
 ) -> int:
     estimated = (Decimal(base_fee_gwei + priority_fee_gwei) * multiplier).to_integral_value(rounding=ROUND_UP)
     return int(min(estimated, Decimal(cap_gwei)))
-
-
-def _assert_register_payload(payload: RegisterPayload) -> None:
-    if payload.entry_amount_out_minimum <= payload.exit_min_out_floor:
-        raise ConstraintViolationError(
-            "exitMinOutFloor must be strictly lower than entryAmountOutMinimum",
-            context={
-                "entry_amount_out_minimum": payload.entry_amount_out_minimum,
-                "exit_min_out_floor": payload.exit_min_out_floor,
-            },
-        )

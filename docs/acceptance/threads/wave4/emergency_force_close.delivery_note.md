@@ -1,51 +1,48 @@
-# 线程交付说明
+# 线程交付说明（更新于 2026-04-09）
 
 ## 基本信息
 - 模块名: `emergency_force_close`
 - Prompt 文件: `docs/prompts/emergency_force_close.prompt.md`
 - Wave: `wave4`
-- 负责人: `not verified yet`
-- 分支: `codex/wave4`
-- HEAD commit: `4297287`
+- 负责人: `codex（待人工签收）`
+- 分支: `codex/wave5`
+- HEAD commit: `8e56fbd`
 
 ## 本次交付做了什么
 - 在 `ReactiveInvestmentCompiler` 增加 break-glass 闭环接口：
   - `emergencyForceClose(bytes32 intentId, uint256 maxSlippageBps) returns (uint256 emergencyExitMinOut)`
-- 增加紧急权限控制能力：
-  - owner 初始化与查询：`constructor` + `owner()`
+- 补齐紧急权限控制能力：
+  - owner 查询：`owner()`
   - relayer 授权：`setEmergencyAuthorizedRelayer` / `isEmergencyAuthorizedRelayer`
-- 增加紧急相关错误与事件：
-  - `UnauthorizedEmergencyForceCloseCaller`
-  - `EmergencyForceCloseOnlyActivePosition`
-  - `EmergencySlippageBpsOutOfRange`
-  - `EmergencyRelayerAuthorizationUpdated`
-  - `EmergencyForceCloseExecuted`
+- 补齐 interface 与 runtime 调用端口：
+  - `IReactiveInvestmentCompiler.sol` 新增 emergency 相关声明，ABI 对齐
+  - `backend/execution/runtime/contract_gateway.py` 新增 `emergency_force_close` 与 recommendation 映射调用
+- 补齐专项测试：
+  - 合约层 12 条 forge 用例（含 emergency 三项最小验证）
+  - runtime 集成测试覆盖 shadow recommendation -> emergency force-close
 
-## 模块实现文件（实际改动）
+## 模块实现文件（本次相关）
 - `backend/contracts/core/ReactiveInvestmentCompiler.sol`
-
-## 未交付项
-- emergency 专项测试用例（权限/非 ActivePosition 拒绝/force-close 后迟滞回调 revert）：`not verified yet`
-- `shadow_monitor` 到 force-close 的真实运行链路：`not verified yet`
-- external execution adapter / settlement receipt schema：`not verified yet`（代码中保留 `TODO(domain)`）
-- emergency 改动的提交锚点（commit SHA）：`not verified yet`
+- `backend/contracts/interfaces/IReactiveInvestmentCompiler.sol`
+- `backend/contracts/test/ReactiveInvestmentCompiler.t.sol`
+- `backend/execution/runtime/contract_gateway.py`
+- `backend/execution/runtime/test_web3_contract_gateway_integration.py`
 
 ## 运行了哪些命令
 ```bash
-git diff --name-only HEAD
-git log --oneline -n 10
-git status --short --branch
-git rev-parse --short HEAD
 forge test --root backend/contracts --contracts backend/contracts/core -vv
+python -m unittest backend.execution.runtime.test_execution_layer backend.execution.runtime.test_web3_contract_gateway_integration -v
 ```
 
 ## 命令结果摘要
-- `git diff --name-only HEAD`：仅 `backend/contracts/core/ReactiveInvestmentCompiler.sol`
-- `git status --short --branch`：`## codex/wave4`，且存在 `backend/contracts/cache/`、`backend/contracts/out/`、`backend/monitor/` 未跟踪目录
-- `git rev-parse --short HEAD`：`4297287`
-- `forge test ...`：`Ran 8 tests ... 8 passed, 0 failed`
+- `forge test ...`：`12 passed, 0 failed`
+- `python -m unittest ...`：`Ran 4 tests ... OK`
+
+## 未交付项 / 风险
+- 尚无 Sepolia 真实交易回执级 smoke 证据（仅本地/测试层验证）。
+- CLI 默认 wiring 尚未把 `execution force-close` 直连 runtime contract gateway。
+- Mainnet 小额灰度前置（Testnet smoke）尚未完成。
 
 ## 对下游影响
-- 下游可直接通过合约实例调用 `emergencyForceClose` 执行 break-glass 关闭并消费 `EmergencyForceCloseExecuted` 事件。
-- 下游不可假设 emergency 专项回归测试已完备。
-- 下游不可假设已存在 shadow monitor 自动联动与执行适配器闭环。
+- 下游可依赖 emergency ABI、权限模型与本地测试证据。
+- 下游不可假设 Testnet 已验证完成，仍需先补 Sepolia smoke。

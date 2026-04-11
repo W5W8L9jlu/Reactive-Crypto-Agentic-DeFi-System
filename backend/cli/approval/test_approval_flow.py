@@ -49,7 +49,6 @@ class ApprovalFlowTests(unittest.TestCase):
                 maxGasPriceGwei=55,
                 stopLossSlippageBps=300,
                 takeProfitSlippageBps=800,
-                exitMinOutFloor=1305000000,
             ),
             hard_constraints=ExecutionHardConstraints(
                 max_slippage_bps=100,

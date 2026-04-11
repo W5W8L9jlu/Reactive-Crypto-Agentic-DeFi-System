@@ -177,7 +177,10 @@ class ExportOutputsTestCase(unittest.TestCase):
                     "outputToken": "0x0000000000000000000000000000000000000003",
                     "plannedEntrySize": 1200000000,
                     "entryMinOut": 599400000000000000,
-                    "exitMinOutFloor": 594005400000000000,
+                    "entryValidUntil": 1710003540,
+                    "maxGasPriceGwei": 27,
+                    "stopLossSlippageBps": 90,
+                    "takeProfitSlippageBps": 250,
                 },
             },
         )
@@ -233,6 +236,7 @@ class ExportOutputsTestCase(unittest.TestCase):
         self.assertEqual(decision_artifact.root, raw_decision)
         self.assertEqual(execution_record.root, raw_execution)
         self.assertTrue(outputs.investment_memo.startswith("# Investment Memo"))
+        self.assertNotIn("TODO:", outputs.investment_memo)
 
     def test_missing_exportable_fields_raises_domain_error_instead_of_guessing(self):
         decision_artifact = DecisionArtifact.model_validate({})

@@ -123,6 +123,22 @@ class StrategyBoundaryService:
                 hard_max=template.hard_daily_trade_limit,
             )
         )
+        traces.append(
+            self._evaluate_auto_manual_reject_by_max(
+                rule_name="projected_daily_loss_pct_nav",
+                observed=strategy_intent.projected_daily_loss_pct_nav,
+                auto_max=template.auto_max_daily_loss_pct_nav,
+                hard_max=template.hard_max_daily_loss_pct_nav,
+            )
+        )
+        traces.append(
+            self._evaluate_auto_manual_reject_by_max(
+                rule_name="projected_consecutive_loss_count",
+                observed=strategy_intent.projected_consecutive_loss_count,
+                auto_max=template.auto_max_consecutive_loss_count,
+                hard_max=template.hard_max_consecutive_loss_count,
+            )
+        )
 
         boundary_decision = self._collapse_to_boundary_decision(traces)
 

@@ -22,7 +22,10 @@ class ContractInvestmentIntent(BaseModel):
     output_token: str = Field(min_length=1, alias="outputToken")
     planned_entry_size: PositiveInt = Field(alias="plannedEntrySize")
     entry_min_out: PositiveInt = Field(alias="entryMinOut")
-    exit_min_out_floor: PositiveInt = Field(alias="exitMinOutFloor")
+    entry_valid_until: PositiveInt = Field(alias="entryValidUntil")
+    max_gas_price_gwei: int = Field(ge=0, alias="maxGasPriceGwei")
+    stop_loss_slippage_bps: int = Field(ge=0, le=10_000, alias="stopLossSlippageBps")
+    take_profit_slippage_bps: int = Field(ge=0, le=10_000, alias="takeProfitSlippageBps")
 
 
 class ContractRegisterCallInputs(BaseModel):
@@ -47,9 +50,8 @@ class RegisterPayload(BaseModel):
     entry_amount_out_minimum: PositiveInt = Field(alias="entryAmountOutMinimum")
     entry_valid_until: PositiveInt = Field(alias="entryValidUntil")
     max_gas_price_gwei: int = Field(ge=0, alias="maxGasPriceGwei")
-    stop_loss_slippage_bps: int = Field(ge=0, alias="stopLossSlippageBps")
-    take_profit_slippage_bps: int = Field(ge=0, alias="takeProfitSlippageBps")
-    exit_min_out_floor: PositiveInt = Field(alias="exitMinOutFloor")
+    stop_loss_slippage_bps: int = Field(ge=0, le=10_000, alias="stopLossSlippageBps")
+    take_profit_slippage_bps: int = Field(ge=0, le=10_000, alias="takeProfitSlippageBps")
 
     def as_contract_call_inputs(self) -> ContractRegisterCallInputs:
         return ContractRegisterCallInputs(
@@ -60,7 +62,10 @@ class RegisterPayload(BaseModel):
                 output_token=self.output_token,
                 planned_entry_size=self.planned_entry_size,
                 entry_min_out=self.entry_amount_out_minimum,
-                exit_min_out_floor=self.exit_min_out_floor,
+                entry_valid_until=self.entry_valid_until,
+                max_gas_price_gwei=self.max_gas_price_gwei,
+                stop_loss_slippage_bps=self.stop_loss_slippage_bps,
+                take_profit_slippage_bps=self.take_profit_slippage_bps,
             ),
         )
 

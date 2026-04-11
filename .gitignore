@@ -2,3 +2,10 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .worktrees/
+.foundry-cache/
+out/
+cache/
+backend/contracts/out/
+backend/contracts/cache/
+external_refs/
+tmp/

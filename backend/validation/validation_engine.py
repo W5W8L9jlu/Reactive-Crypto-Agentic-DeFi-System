@@ -177,9 +177,24 @@ def _build_contract_bindings(validated_input: ValidationInput) -> tuple[Contract
                 unit="identity",
             ),
             ContractBinding(
-                source_field="execution_plan.register_payload.exitMinOutFloor",
-                target_field="investment_intent.exitMinOutFloor",
-                unit="identity",
+                source_field="execution_plan.register_payload.entryValidUntil",
+                target_field="investment_intent.entryValidUntil",
+                unit="seconds",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.maxGasPriceGwei",
+                target_field="investment_intent.maxGasPriceGwei",
+                unit="gwei",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.stopLossSlippageBps",
+                target_field="investment_intent.stopLossSlippageBps",
+                unit="bps",
+            ),
+            ContractBinding(
+                source_field="execution_plan.register_payload.takeProfitSlippageBps",
+                target_field="investment_intent.takeProfitSlippageBps",
+                unit="bps",
             ),
         ]
     )

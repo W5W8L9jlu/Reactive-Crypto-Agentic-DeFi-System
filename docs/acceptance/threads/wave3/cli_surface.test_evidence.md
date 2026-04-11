@@ -1,51 +1,35 @@
-# cli_surface 线程测试证据
+# cli_surface 线程测试证据（更新于 2026-04-09）
 
 ## 测试目标
-- 验证六组命令入口已接入 CLI 路由层。
-- 验证审批展示命令默认/`--raw` 行为与参数约束。
-- 验证 monitor alert 视图输出（含空状态与优先级排序）。
+- 覆盖 PRD 要求的 CLI 子命令面（strategy/decision/approval/execution/export/monitor）。
+- 验证高危告警专用渲染与 force-close 文案提示。
+- 验证默认 wiring 可运行（不再触发 `RouteBindingMissingError`）。
 
-## 覆盖场景
-- 命令路由：
-  - `--help` 包含 `strategy/decision/approval/execution/export/monitor`
-  - 各命令组子命令可调用到注入 handler
-- 审批显示：
-  - 默认模式输出 battle card 文本
-  - `--raw --machine-truth-json` 输出原始 JSON
-  - `--raw` 缺少 machine truth 参数时返回错误码 `2`
-- alert 视图：
-  - critical 在 warning 前排序
-  - 空告警显示 `No active alerts`
-
-## 执行命令（本线程实测）
+## 执行命令（本次实测）
 ```bash
-python -m unittest backend.cli.test_app -v
-python -m unittest backend.cli.approval.test_approval_flow -v
-python -m unittest backend.cli.views.test_alerts -v
+python -m unittest backend.cli.test_app backend.cli.test_wiring backend.cli.views.test_alerts backend.cli.approval.test_approval_flow backend.export.test_export_outputs backend.execution.runtime.test_execution_layer backend.execution.runtime.test_web3_contract_gateway_integration backend.decision.orchestrator.test_main_chain_service backend.decision.adapters.test_cryptoagents_runner
 ```
 
-## 输入与输出样例（来自测试代码）
-- 输入样例：
-  - `approval show --raw --machine-truth-json '{"id":"ti-001"}'`
-  - `monitor alerts --critical-only`
-- 期望输出片段：
-  - `Approval Battle Card`
-  - `{"id":"ti-001"}`
-  - `CRIT_GRACE_TIMEOUT`
-  - `No active alerts`
+## 关键覆盖点
+- CLI 子命令调用覆盖：
+  - `strategy create/list/show/edit`
+  - `decision run/dry-run`
+  - `approval list/show/approve/reject`
+  - `execution show/logs/force-close/fork-replay`
+  - `export json/markdown/memo`
+  - `monitor alerts/shadow-status`
+- 高危告警渲染覆盖：
+  - `monitor alerts --critical-only` 输出 `CRITICAL ALERT`
+  - 输出明确指令：`agent-cli execution force-close intent-001`
+- wiring 覆盖：
+  - `build_production_services()` 可绑定全部 CLI route
+  - `create_cli_app(services=build_production_services())` 可直接执行命令并返回 `exit_code=0`
 
 ## 实际结果
-- `python -m unittest backend.cli.test_app -v`
-  - `Ran 4 tests in 0.394s`
-  - `OK`
-- `python -m unittest backend.cli.approval.test_approval_flow -v`
-  - `Ran 5 tests in 0.002s`
-  - `OK`
-- `python -m unittest backend.cli.views.test_alerts -v`
-  - `Ran 2 tests in 0.032s`
-  - `OK`
+- 退出码：`0`
+- 总计：`Ran 30 tests in 5.483s`
+- 结果：`OK`
 
 ## 未验证项
-- 真实业务 service adapter 绑定后的命令执行结果：`not verified yet`
-- Wave3 级端到端 dry-run（context -> adapter -> validation/approval）：`not verified yet`
-
+- Sepolia 真链 smoke（含审批到注册执行再到 monitor/force-close 的完整链路）尚未形成可复现记录。
+- `agent-cli` shell 级可执行入口在当前环境未安装（仅 Typer app 与测试层可调用）。

@@ -46,6 +46,10 @@ class StrategyTemplate(BaseModel):
 
     auto_daily_trade_limit: int = Field(ge=0)
     hard_daily_trade_limit: int = Field(ge=0)
+    auto_max_daily_loss_pct_nav: Decimal = Field(ge=0, le=1, default=Decimal("0"))
+    hard_max_daily_loss_pct_nav: Decimal = Field(ge=0, le=1, default=Decimal("0"))
+    auto_max_consecutive_loss_count: int = Field(ge=0, default=0)
+    hard_max_consecutive_loss_count: int = Field(ge=0, default=0)
 
     execution_mode: Literal["conditional"] = "conditional"
 
@@ -57,6 +61,10 @@ class StrategyTemplate(BaseModel):
             raise ValueError("hard_max_slippage_bps must be >= auto_max_slippage_bps")
         if self.hard_daily_trade_limit < self.auto_daily_trade_limit:
             raise ValueError("hard_daily_trade_limit must be >= auto_daily_trade_limit")
+        if self.hard_max_daily_loss_pct_nav < self.auto_max_daily_loss_pct_nav:
+            raise ValueError("hard_max_daily_loss_pct_nav must be >= auto_max_daily_loss_pct_nav")
+        if self.hard_max_consecutive_loss_count < self.auto_max_consecutive_loss_count:
+            raise ValueError("hard_max_consecutive_loss_count must be >= auto_max_consecutive_loss_count")
         return self
 
 
@@ -66,6 +74,8 @@ class StrategyIntent(BaseModel):
     template_version: PositiveInt
     execution_mode: Literal["conditional"] = "conditional"
     projected_daily_trade_count: int = Field(ge=0, default=0)
+    projected_daily_loss_pct_nav: Decimal = Field(ge=0, le=1, default=Decimal("0"))
+    projected_consecutive_loss_count: int = Field(ge=0, default=0)
 
 
 class TradeIntent(BaseModel):

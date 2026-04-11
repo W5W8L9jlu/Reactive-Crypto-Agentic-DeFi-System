@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timezone
 
 from typer.testing import CliRunner
 
@@ -16,25 +17,43 @@ class CLISurfaceRouteTests(unittest.TestCase):
     @staticmethod
     def _build_services() -> CLISurfaceServices:
         return CLISurfaceServices(
+            strategy_create=lambda: "strategy-create-ok",
             strategy_list=lambda: "strategy-route-ok",
-            decision_run=lambda context_id: f"decision-route-ok:{context_id}",
-            approval_show=lambda raw, machine_truth_json: (
-                machine_truth_json
+            strategy_show=lambda strategy_id: f"strategy-show-ok:{strategy_id}",
+            strategy_edit=lambda strategy_id: f"strategy-edit-ok:{strategy_id}",
+            decision_run=lambda strategy_id: f"decision-route-ok:{strategy_id}",
+            decision_dry_run=lambda strategy_id: f"decision-dry-run-ok:{strategy_id}",
+            approval_list=lambda: "approval-list-ok",
+            approval_show=lambda intent_id, raw, machine_truth_json: (
+                (machine_truth_json if machine_truth_json is not None else f'{{"intent_id":"{intent_id}"}}')
                 if raw
-                else "Approval Battle Card\nTTL Remaining: 5m 0s\nApprove: allowed"
+                else f"Approval Battle Card\nIntent: {intent_id}\nTTL Remaining: 5m 0s\nApprove: allowed"
             ),
-            approval_approve=lambda trade_intent_id: f"approved:{trade_intent_id}",
-            approval_reject=lambda trade_intent_id, reason: f"rejected:{trade_intent_id}:{reason}",
-            execution_status=lambda trade_intent_id: f"execution-status:{trade_intent_id}",
-            export_bundle=lambda trade_intent_id: f"export-bundle:{trade_intent_id}",
+            approval_approve=lambda intent_id: f"approved:{intent_id}",
+            approval_reject=lambda intent_id, reason: f"rejected:{intent_id}:{reason}",
+            execution_show=lambda intent_id: f"execution-show:{intent_id}",
+            execution_logs=lambda intent_id: f"execution-logs:{intent_id}",
+            execution_force_close=lambda intent_id: f"execution-force-close:{intent_id}",
+            execution_fork_replay=(
+                lambda intent_id, from_block, to_block: f"execution-fork-replay:{intent_id}:{from_block}:{to_block}"
+            ),
+            export_json=lambda intent_id: f'{{"intent_id":"{intent_id}"}}',
+            export_markdown=lambda intent_id: f"# Audit Markdown Excerpt\nintent={intent_id}",
+            export_memo=lambda intent_id: f"# Investment Memo\nintent={intent_id}",
             monitor_alerts=lambda critical_only: (
                 [
                     AlertView(
-                        code="CRIT_GRACE_TIMEOUT",
+                        code="SHADOW_MONITOR_CRITICAL_STALE_POSITION",
                         severity=AlertSeverity.CRITICAL,
-                        message="grace period exceeded",
+                        message="threshold breached after grace period",
                         source="shadow-monitor",
                         escalation_required=True,
+                        intent_id="intent-001",
+                        observed_price="2910",
+                        threshold_price="2950",
+                        breach_blocks=4,
+                        estimated_additional_loss_usd="40",
+                        detected_at=datetime(2026, 4, 9, 10, 0, tzinfo=timezone.utc),
                     )
                 ]
                 if critical_only
@@ -47,14 +66,21 @@ class CLISurfaceRouteTests(unittest.TestCase):
                         escalation_required=False,
                     ),
                     AlertView(
-                        code="CRIT_GRACE_TIMEOUT",
+                        code="SHADOW_MONITOR_CRITICAL_STALE_POSITION",
                         severity=AlertSeverity.CRITICAL,
                         message="grace period exceeded",
                         source="shadow-monitor",
                         escalation_required=True,
+                        intent_id="intent-001",
+                        observed_price="2910",
+                        threshold_price="2950",
+                        breach_blocks=4,
+                        estimated_additional_loss_usd="40",
+                        detected_at=datetime(2026, 4, 9, 10, 0, tzinfo=timezone.utc),
                     ),
                 ]
             ),
+            monitor_shadow_status=lambda: "shadow-status-ok",
         )
 
     def test_help_contains_six_command_groups(self) -> None:
@@ -69,16 +95,30 @@ class CLISurfaceRouteTests(unittest.TestCase):
 
     def test_route_commands_are_wired(self) -> None:
         checks = [
+            (["strategy", "create"], "strategy-create-ok"),
             (["strategy", "list"], "strategy-route-ok"),
-            (["decision", "run", "--context-id", "ctx-001"], "decision-route-ok:ctx-001"),
-            (["approval", "approve", "--trade-intent-id", "ti-001"], "approved:ti-001"),
+            (["strategy", "show", "strat-001"], "strategy-show-ok:strat-001"),
+            (["strategy", "edit", "strat-001"], "strategy-edit-ok:strat-001"),
+            (["decision", "run", "--strategy", "strat-001"], "decision-route-ok:strat-001"),
+            (["decision", "dry-run", "--strategy", "strat-001"], "decision-dry-run-ok:strat-001"),
+            (["approval", "list"], "approval-list-ok"),
+            (["approval", "approve", "intent-001"], "approved:intent-001"),
             (
-                ["approval", "reject", "--trade-intent-id", "ti-001", "--reason", "manual-stop"],
-                "rejected:ti-001:manual-stop",
+                ["approval", "reject", "intent-001", "--reason", "manual-stop"],
+                "rejected:intent-001:manual-stop",
             ),
-            (["execution", "status", "--trade-intent-id", "ti-001"], "execution-status:ti-001"),
-            (["export", "bundle", "--trade-intent-id", "ti-001"], "export-bundle:ti-001"),
-            (["monitor", "alerts", "--critical-only"], "CRIT_GRACE_TIMEOUT"),
+            (["execution", "show", "intent-001"], "execution-show:intent-001"),
+            (["execution", "logs", "intent-001"], "execution-logs:intent-001"),
+            (["execution", "force-close", "intent-001"], "execution-force-close:intent-001"),
+            (
+                ["execution", "fork-replay", "intent-001", "--from-block", "100", "--to-block", "120"],
+                "execution-fork-replay:intent-001:100:120",
+            ),
+            (["export", "json", "intent-001"], '{"intent_id":"intent-001"}'),
+            (["export", "markdown", "intent-001"], "# Audit Markdown Excerpt"),
+            (["export", "memo", "intent-001"], "# Investment Memo"),
+            (["monitor", "alerts", "--critical-only"], "SHADOW_MONITOR_CRITICAL_STALE_POSITION"),
+            (["monitor", "shadow-status"], "shadow-status-ok"),
         ]
         for args, expected in checks:
             result = self.runner.invoke(self.app, args)
@@ -86,22 +126,28 @@ class CLISurfaceRouteTests(unittest.TestCase):
             self.assertIn(expected, result.stdout)
 
     def test_approval_show_supports_default_and_raw_mode(self) -> None:
-        default_result = self.runner.invoke(self.app, ["approval", "show"])
+        default_result = self.runner.invoke(self.app, ["approval", "show", "intent-001"])
         self.assertEqual(default_result.exit_code, 0)
         self.assertIn("Approval Battle Card", default_result.stdout)
         self.assertIn("TTL Remaining", default_result.stdout)
 
         raw_result = self.runner.invoke(
             self.app,
-            ["approval", "show", "--raw", "--machine-truth-json", '{"id":"ti-001"}'],
+            ["approval", "show", "intent-001", "--raw", "--machine-truth-json", '{"id":"ti-001"}'],
         )
         self.assertEqual(raw_result.exit_code, 0)
         self.assertIn('{"id":"ti-001"}', raw_result.stdout)
 
-    def test_approval_show_raw_requires_machine_truth_json(self) -> None:
-        result = self.runner.invoke(self.app, ["approval", "show", "--raw"])
-        self.assertEqual(result.exit_code, 2)
-        self.assertIn("requires `--machine-truth-json`", result.stdout)
+    def test_approval_show_raw_works_without_machine_truth_override(self) -> None:
+        result = self.runner.invoke(self.app, ["approval", "show", "intent-001", "--raw"])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('{"intent_id":"intent-001"}', result.stdout)
+
+    def test_monitor_alerts_renders_critical_force_close_banner(self) -> None:
+        result = self.runner.invoke(self.app, ["monitor", "alerts", "--critical-only"])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn("CRITICAL ALERT", result.stdout)
+        self.assertIn("agent-cli execution force-close intent-001", result.stdout)
 
 
 if __name__ == "__main__":

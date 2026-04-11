@@ -80,7 +80,8 @@ class ExecutionCompilerTestCase(unittest.TestCase):
         self.assertEqual(payload.entry_amount_out_minimum, 599400000000000000)
         self.assertEqual(payload.entry_valid_until, 1710003540)
         self.assertEqual(payload.max_gas_price_gwei, 27)
-        self.assertEqual(payload.exit_min_out_floor, 594005400000000000)
+        self.assertEqual(payload.stop_loss_slippage_bps, 90)
+        self.assertEqual(payload.take_profit_slippage_bps, 250)
 
     def test_freeze_contract_call_inputs_maps_to_contract_shape(self) -> None:
         plan = compile_execution_plan(
@@ -102,7 +103,10 @@ class ExecutionCompilerTestCase(unittest.TestCase):
                 "outputToken": "0x0000000000000000000000000000000000000003",
                 "plannedEntrySize": 1200000000,
                 "entryMinOut": 599400000000000000,
-                "exitMinOutFloor": 594005400000000000,
+                "entryValidUntil": 1710003540,
+                "maxGasPriceGwei": 27,
+                "stopLossSlippageBps": 90,
+                "takeProfitSlippageBps": 250,
             },
         )
 
