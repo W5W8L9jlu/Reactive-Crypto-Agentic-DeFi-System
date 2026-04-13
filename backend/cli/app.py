@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence
 
@@ -35,7 +36,7 @@ ExportMarkdownHandler = Callable[[str], str]
 ExportMemoHandler = Callable[[str], str]
 MonitorAlertsHandler = Callable[[bool], Sequence[AlertView]]
 MonitorShadowStatusHandler = Callable[[], str]
-DoctorHandler = Callable[[], str]
+DoctorHandler = Callable[..., str]
 
 
 def _missing_binding(route: str) -> Callable[..., object]:
@@ -286,11 +287,18 @@ def create_cli_app(
         )
 
     @app.command("doctor")
-    def doctor() -> None:
+    def doctor(
+        gate: str = typer.Option(
+            "full",
+            "--gate",
+            help="Doctor gate scope: llm|chain|full",
+            case_sensitive=False,
+        ),
+    ) -> None:
         _print_result(
             render_console,
             "doctor",
-            _invoke_route_or_exit(render_console, routed_services.doctor_check),
+            _invoke_doctor_route_or_exit(render_console, routed_services.doctor_check, gate),
         )
 
     app.add_typer(strategy_app, name="strategy")
@@ -302,11 +310,38 @@ def create_cli_app(
     return app
 
 
-def _invoke_route_or_exit(console: Console, handler: Callable[..., object], *args: object) -> object:
+def _invoke_route_or_exit(
+    console: Console,
+    handler: Callable[..., object],
+    *args: object,
+    **kwargs: object,
+) -> object:
     try:
-        return handler(*args)
+        return handler(*args, **kwargs)
     except CLISurfaceError as exc:
         _raise_cli_error(console, exc)
+
+
+def _invoke_doctor_route_or_exit(
+    console: Console,
+    handler: Callable[..., object],
+    gate: str,
+) -> object:
+    try:
+        signature = inspect.signature(handler)
+        if len(signature.parameters) == 0:
+            return _invoke_route_or_exit(console, handler)
+        gate_parameter = signature.parameters.get("gate")
+        if gate_parameter is not None and gate_parameter.kind in {
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.KEYWORD_ONLY,
+            inspect.Parameter.VAR_KEYWORD,
+        }:
+            return _invoke_route_or_exit(console, handler, gate=gate)
+    except (TypeError, ValueError):
+        # Conservative fallback for callables without inspect metadata.
+        pass
+    return _invoke_route_or_exit(console, handler, gate)
 
 
 def _print_result(console: Console, route: str, result: object) -> None:

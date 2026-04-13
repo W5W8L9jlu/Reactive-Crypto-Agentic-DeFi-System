@@ -39,25 +39,25 @@ def _build_services(*, llm_only: bool):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="LLM channel smoke check based on CLI doctor contract.")
-    parser.add_argument(
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
         "--llm-only",
         action="store_true",
         help="Only validate LLM config/proxy/connectivity contract.",
     )
+    mode_group.add_argument(
+        "--full",
+        action="store_true",
+        help="Validate full doctor contract (chain + llm).",
+    )
     args = parser.parse_args()
 
+    gate = "llm" if args.llm_only else "full"
     services = _build_services(llm_only=args.llm_only)
-    payload = json.loads(services.doctor_check())
+    payload = json.loads(services.doctor_check(gate))
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
-    if args.llm_only:
-        passed = bool(
-            payload.get("proxy_policy_ok")
-            and payload.get("decision_llm_ready")
-            and payload.get("llm_connectivity_ok")
-        )
-    else:
-        passed = payload.get("status") == "ok"
+    passed = payload.get("gate_status") == "ok"
     if passed:
         print("llm_smoke: OK")
         return 0

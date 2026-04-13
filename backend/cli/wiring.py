@@ -284,8 +284,16 @@ def build_contract_gateway_from_runtime_env() -> ContractGateway:
     web3 = Web3(Web3.HTTPProvider(rpc_url))
     if not web3.is_connected():
         raise RouteBindingMissingError(f"execution.force-close cannot connect rpc: {rpc_url}")
-    contract = web3.eth.contract(address=contract_address, abi=abi)
-    sender = web3.eth.account.from_key(private_key).address
+    try:
+        contract = web3.eth.contract(address=contract_address, abi=abi)
+    except Exception as exc:
+        raise RouteBindingMissingError(
+            f"execution.force-close failed to bind contract: {exc.__class__.__name__}"
+        ) from exc
+    try:
+        sender = web3.eth.account.from_key(private_key).address
+    except Exception as exc:
+        raise RouteBindingMissingError("execution.force-close invalid SEPOLIA_PRIVATE_KEY") from exc
     return build_contract_gateway_from_web3(
         web3=web3,
         contract=contract,
@@ -353,7 +361,10 @@ def _build_main_chain_request_for_strategy(
     intent_id = _build_intent_id(strategy_id=strategy_id)
     trade_intent_id = f"ti-{strategy_id}-{datetime.now(tz=timezone.utc).strftime('%Y%m%d%H%M%S')}"
 
-    chain_state = _build_chain_state(contract_gateway=contract_gateway)
+    chain_state = _build_chain_state(
+        contract_gateway=contract_gateway,
+        allow_fallback=dry_run,
+    )
     rpc_snapshot = _build_rpc_snapshot(chain_state=chain_state)
     registration_context = _build_registration_context(
         strategy_record=strategy_record,
@@ -669,7 +680,11 @@ def build_production_services(
         }
         return json.dumps(payload, ensure_ascii=False)
 
-    def doctor_check() -> str:
+    def doctor_check(gate: str = "full") -> str:
+        resolved_gate = gate.strip().lower()
+        if resolved_gate not in {"llm", "chain", "full"}:
+            raise CLISurfaceInputError("doctor --gate must be one of: llm, chain, full")
+
         runtime_env = _resolve_runtime_env()
         openai_api_key_present = bool(os.environ.get("OPENAI_API_KEY"))
         openai_base_url_present = bool(os.environ.get("OPENAI_BASE_URL"))
@@ -713,37 +728,43 @@ def build_production_services(
             checks["contract_gateway_wired"] = False
             checks["rpc_connected"] = False
 
-        blocked_reasons: list[str] = []
+        chain_blocked_reasons: list[str] = []
         if not checks["rpc_env_present"]:
-            blocked_reasons.append("missing SEPOLIA_RPC_URL or BASE_SEPOLIA_RPC_URL")
+            chain_blocked_reasons.append("missing SEPOLIA_RPC_URL or BASE_SEPOLIA_RPC_URL")
         if not checks["private_key_present"]:
-            blocked_reasons.append("missing SEPOLIA_PRIVATE_KEY")
+            chain_blocked_reasons.append("missing SEPOLIA_PRIVATE_KEY")
         if not checks["contract_address_present"]:
-            blocked_reasons.append("missing REACTIVE_INVESTMENT_COMPILER_ADDRESS")
+            chain_blocked_reasons.append("missing REACTIVE_INVESTMENT_COMPILER_ADDRESS")
         if not checks["artifact_exists"]:
-            blocked_reasons.append("missing contract artifact")
+            chain_blocked_reasons.append("missing contract artifact")
         if not checks["contract_gateway_wired"]:
-            blocked_reasons.append("runtime ContractGateway not wired")
+            chain_blocked_reasons.append("runtime ContractGateway not wired")
+
+        llm_blocked_reasons: list[str] = []
         if not checks["openai_api_key_present"]:
-            blocked_reasons.append("missing OPENAI_API_KEY")
+            llm_blocked_reasons.append("missing OPENAI_API_KEY")
         if not checks["openai_base_url_present"]:
-            blocked_reasons.append("missing OPENAI_BASE_URL")
+            llm_blocked_reasons.append("missing OPENAI_BASE_URL")
         if not checks["proxy_policy_ok"]:
-            blocked_reasons.append(
+            llm_blocked_reasons.append(
                 "local proxy is forbidden in production (remove HTTP_PROXY/HTTPS_PROXY/ALL_PROXY localhost settings)"
             )
         if checks["decision_llm_ready"] and not checks["llm_connectivity_ok"]:
-            blocked_reasons.append("OPENAI connectivity probe failed")
-        checks["blocked_reasons"] = blocked_reasons
-        checks["status"] = "ok" if (
-            checks["rpc_env_present"]
-            and checks["private_key_present"]
-            and checks["contract_address_present"]
-            and checks["artifact_exists"]
-            and checks["contract_gateway_wired"]
-            and checks["decision_llm_ready"]
-            and checks["llm_connectivity_ok"]
-        ) else "blocked"
+            llm_blocked_reasons.append("OPENAI connectivity probe failed")
+
+        full_blocked_reasons = chain_blocked_reasons + llm_blocked_reasons
+        if resolved_gate == "llm":
+            gate_blocked_reasons = llm_blocked_reasons
+        elif resolved_gate == "chain":
+            gate_blocked_reasons = chain_blocked_reasons
+        else:
+            gate_blocked_reasons = full_blocked_reasons
+
+        checks["gate"] = resolved_gate
+        checks["blocked_reasons"] = gate_blocked_reasons
+        checks["gate_status"] = "ok" if not gate_blocked_reasons else "blocked"
+        checks["full_status"] = "ok" if not full_blocked_reasons else "blocked"
+        checks["status"] = checks["full_status"]
         return json.dumps(checks, ensure_ascii=False)
 
     if contract_gateway is None:
@@ -948,7 +969,11 @@ def _build_decision_context(*, strategy_id: str, constraints: StrategyConstraint
     )
 
 
-def _build_chain_state(*, contract_gateway: ContractGateway | None) -> ChainStateSnapshot:
+def _build_chain_state(
+    *,
+    contract_gateway: ContractGateway | None,
+    allow_fallback: bool = True,
+) -> ChainStateSnapshot:
     web3 = getattr(getattr(contract_gateway, "_client", None), "_web3", None)
     if web3 is not None:
         try:
@@ -965,8 +990,9 @@ def _build_chain_state(*, contract_gateway: ContractGateway | None) -> ChainStat
                 input_output_price=Decimal("0.0005"),
                 input_token_usd_price=Decimal("1"),
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            if not allow_fallback:
+                raise CLISurfaceInputError("failed to fetch latest chain state from rpc") from exc
 
     return ChainStateSnapshot(
         base_fee_gwei=20,
@@ -1073,7 +1099,10 @@ def _safe_get(root: Any, *path: str) -> Any:
 
 
 def _load_contract_abi(artifact_path: Path) -> Any:
-    artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    try:
+        artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise RouteBindingMissingError(f"invalid contract artifact json: {artifact_path}") from exc
     abi = artifact.get("abi")
     if not isinstance(abi, list):
         raise RouteBindingMissingError(f"invalid abi in artifact: {artifact_path}")

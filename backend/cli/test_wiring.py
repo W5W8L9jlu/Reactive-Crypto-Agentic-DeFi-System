@@ -12,7 +12,8 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from backend.cli.errors import RouteBindingMissingError
+from backend.cli import wiring as wiring_module
+from backend.cli.errors import CLISurfaceInputError, RouteBindingMissingError
 from backend.cli.app import create_cli_app, create_default_cli_app
 from backend.cli.runtime_store import CLIRuntimeStore, IntentArtifactRecord
 from backend.cli.wiring import (
@@ -311,6 +312,46 @@ class CLIWiringTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(RouteBindingMissingError):
                 build_contract_gateway_from_runtime_env()
+
+    def test_build_contract_gateway_from_runtime_env_rejects_invalid_artifact_json(self) -> None:
+        with TemporaryDirectory() as tmp_dir:
+            artifact_path = Path(tmp_dir) / "artifact.json"
+            artifact_path.write_text("{invalid-json", encoding="utf-8")
+            env = {
+                "SEPOLIA_RPC_URL": "http://127.0.0.1:8545",
+                "SEPOLIA_PRIVATE_KEY": "0x" + "1" * 64,
+                "REACTIVE_INVESTMENT_COMPILER_ADDRESS": "0x" + "2" * 40,
+                "REACTIVE_INVESTMENT_COMPILER_ARTIFACT": str(artifact_path),
+            }
+            with patch.dict(os.environ, env, clear=True):
+                with self.assertRaises(RouteBindingMissingError):
+                    build_contract_gateway_from_runtime_env()
+
+    def test_build_chain_state_raises_when_rpc_fetch_fails_and_fallback_is_disabled(self) -> None:
+        class _FailingEth:
+            @staticmethod
+            def get_block(_identifier):
+                raise RuntimeError("rpc unavailable")
+
+        class _FailingWeb3:
+            eth = _FailingEth()
+
+        gateway = SimpleNamespace(_client=SimpleNamespace(_web3=_FailingWeb3()))
+        with self.assertRaises(CLISurfaceInputError):
+            wiring_module._build_chain_state(contract_gateway=gateway, allow_fallback=False)
+
+    def test_build_chain_state_falls_back_when_rpc_fetch_fails_in_fallback_mode(self) -> None:
+        class _FailingEth:
+            @staticmethod
+            def get_block(_identifier):
+                raise RuntimeError("rpc unavailable")
+
+        class _FailingWeb3:
+            eth = _FailingEth()
+
+        gateway = SimpleNamespace(_client=SimpleNamespace(_web3=_FailingWeb3()))
+        snapshot = wiring_module._build_chain_state(contract_gateway=gateway, allow_fallback=True)
+        self.assertGreater(snapshot.block_number, 0)
 
     def test_default_cli_app_decision_run_no_longer_returns_todo_placeholder(self) -> None:
         runner = CliRunner()

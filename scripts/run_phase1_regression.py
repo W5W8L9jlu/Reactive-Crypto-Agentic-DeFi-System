@@ -50,8 +50,9 @@ def main() -> int:
             cwd=repo_root,
         )
     if args.with_llm:
+        smoke_gate_flag = "--full" if args.with_chain else "--llm-only"
         _run(
-            [python, "scripts/check_llm_channel_smoke.py", "--llm-only"],
+            [python, "scripts/check_llm_channel_smoke.py", smoke_gate_flag],
             cwd=repo_root,
         )
     return 0
