@@ -140,22 +140,26 @@ If you want to work on a specific module, the expected reading order is:
 ## Prototype Status / 原型状态
 
 - Runnable and inspectable as a research-grade prototype
+  这是一个可运行、可检查的 research-grade prototype
 - Structured as a full end-to-end system, with some modules more mature than others
+  它已经具备完整端到端系统结构，但各模块成熟度并不完全一致
 - Suitable for architecture exploration, workflow design, and iterative implementation
+  适合做架构探索、工作流设计与迭代实现
 - Still experimental and not ready for unattended production capital deployment
-
-- 这是一个可运行、可检查的 research-grade prototype
-- 它已经具备完整端到端系统结构，但各模块成熟度并不完全一致
-- 适合做架构探索、工作流设计与迭代实现
-- 仍然属于实验性系统，不适合无人值守地直接部署真实资金
+  仍然属于实验性系统，不适合无人值守地直接部署真实资金
 
 ## Roadmap / 路线图
 
-1. Stabilize typed decision outputs and validation contracts 稳定结构化决策输出与校验契约
-2. Tighten CLI approval and operator review surfaces 强化 CLI 审批与操作者复核界面
-3. Complete execution compiler and Reactive-trigger integration 完成 execution compiler 与 Reactive trigger 集成
-4. Expand monitoring, reconciliation, and export paths 扩展监控、对账与导出链路
-5. Add richer risk controls and optional cross-chain adapters 增加更丰富的风险控制与可选跨链适配能力
+1. Stabilize typed decision outputs and validation contracts
+   稳定结构化决策输出与校验契约
+3. Tighten CLI approval and operator review surfaces
+   强化 CLI 审批与操作者复核界面
+5. Complete execution compiler and Reactive-trigger integration
+   完成 execution compiler 与 Reactive trigger 集成
+7. Expand monitoring, reconciliation, and export paths
+   扩展监控、对账与导出链路
+9. Add richer risk controls and optional cross-chain adapters
+   增加更丰富的风险控制与可选跨链适配能力
 
 ## Disclaimer / 风险声明
 
