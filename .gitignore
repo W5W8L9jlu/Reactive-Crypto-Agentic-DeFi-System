@@ -3,8 +3,12 @@ __pycache__/
 .pytest_cache/
 .worktrees/
 .foundry-cache/
+.codex/
 .tmp/
 .npm-cache/
+*.docx
+*.pdf
+prd_final_v10.md
 out/
 cache/
 artifacts/
