@@ -140,15 +140,19 @@ If you want to work on a specific module, the expected reading order is:
 ## Prototype Status / 原型状态
 
 - Runnable and inspectable as a research-grade prototype
+  
   这是一个可运行、可检查的 research-grade prototype
   
 - Structured as a full end-to-end system, with some modules more mature than others
+  
   它已经具备完整端到端系统结构，但各模块成熟度并不完全一致
   
 - Suitable for architecture exploration, workflow design, and iterative implementation
+  
   适合做架构探索、工作流设计与迭代实现
   
 - Still experimental and not ready for unattended production capital deployment
+  
   仍然属于实验性系统，不适合无人值守地直接部署真实资金
 
 ## Roadmap / 路线图
