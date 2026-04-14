@@ -54,26 +54,44 @@ The following checkpoints are extracted from an actual run record (`实际运行
 1. **Initial UI / 初始界面**  
    Main ReactiveAgents screen shows progress, tool/message panel, and current report context, with the run currently at `decision.dry-run`.  
    ReactiveAgents 主界面显示流程进度、消息与工具区、当前报告上下文，当前流程运行到 `decision.dry-run`。
+   
+   ![Initial UI / 初始界面](cli_picture/Initial%20UI.png)
+   *Figure 1 / 图1: Main ReactiveAgents screen overview.*
 
 2. **Decision Stage (`decision.dry-run`) / 决策阶段（`decision.dry-run`）**  
    Machine Truth details include strategy intent, trade conditions, risk parameters, and multi-agent reasoning traces.  
    Machine Truth 详情包含策略意图、交易条件、风控参数以及多代理推理痕迹。
+   
+   ![Decision Stage / 决策阶段](cli_picture/Decision%20Stage.png)
+   *Figure 2 / 图2: Machine Truth details in `decision.dry-run`.*
 
 3. **Approval List (`approval.list`) / 审批列表（`approval.list`）**  
    The pending-approval intent list is queryable, confirming the flow has entered the approval gate.  
    可查询待审批意图列表，证明流程已进入审批关口。
+   
+   ![Approval List / 审批列表](cli_picture/Approval%20List.png)
+   *Figure 3 / 图3: Pending intents shown in `approval.list`.*
 
 4. **Approval Detail (`approval.show`) / 审批详情（`approval.show`）**  
    Approval Battle Card displays target asset, position size, stop-loss/take-profit, TTL, and approval conclusion.  
    Approval Battle Card 展示标的、仓位、止盈止损、TTL 与审批结论。
+   
+   ![Approval Detail / 审批详情](cli_picture/Approval%20Detail.png)
+   *Figure 4 / 图4: Approval Battle Card in `approval.show`.*
 
 5. **Execution Detail (`execution.show`) / 执行详情（`execution.show`）**  
    Execution output records the intent state transition from `PendingEntry` to `ActivePosition`, plus callback records.  
    执行输出记录意图状态从 `PendingEntry` 进入 `ActivePosition`，并保留回调记录。
+   
+   ![Execution Detail / 执行详情](cli_picture/Execution%20Detail.png)
+   *Figure 5 / 图5: State transition and callbacks in `execution.show`.*
 
 6. **Export Output (`export.memo`) / 导出结果（`export.memo`）**  
    The system generates an Investment Memo with boundary statements, traceable metadata, and final conclusion text.  
    系统自动生成 Investment Memo，包含边界声明、可追溯元数据与结论文本。
+   
+   ![Export Output / 导出结果](cli_picture/Export%20Output.png)
+   *Figure 6 / 图6: Generated memo in `export.memo`.*
 
 ## Why This Prototype Matters / 这个原型为什么重要
 
