@@ -1717,4 +1717,4 @@ function emergencyForceClose(uint256 intentId, uint256 maxSlippageBps) external 
 
 这是一个：
 
-> **以 CryptoAgents 为投研内核、以 Strategy Boundary 为规则边界、以 Reactive 为纯链上条件执行引擎、以 Execution Compiler 为注册时执行桥梁、以 RPC 为执行真相的 CLI 单链 DeFi 链上投资系统。**
+> **以 CryptoAgents 为投研内核、以 Strategy Boundary 为规则边界、以 Reactive 为纯链上条件执行引擎、以 Execution Compiler 为注册时执行桥梁、以 RPC 为执行真相的 CLI 链上 DeFi 链上投资系统。**

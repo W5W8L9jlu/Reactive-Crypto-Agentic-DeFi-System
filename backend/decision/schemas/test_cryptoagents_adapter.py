@@ -16,7 +16,10 @@ from backend.data.context_builder.models import (
     StrategyConstraints,
     TrendDirection,
 )
-from backend.decision.adapters.cryptoagents_adapter import CryptoAgentsAdapter
+from backend.decision.adapters.cryptoagents_adapter import (
+    CryptoAgentsAdapter,
+    CryptoAgentsConstraintMismatchError,
+)
 from backend.strategy.models import StrategyTemplate
 
 
@@ -38,6 +41,54 @@ class _FakeRunner:
                 {
                     "agent": "portfolio_manager",
                     "summary": "给出条件入场意图",
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                }
+            ],
+        }
+
+
+class _ConstraintBreakingRunner:
+    def run(self, context: DecisionContext) -> dict[str, object]:
+        return {
+            "pair": context.strategy_constraints.pair,
+            "dex": context.strategy_constraints.dex,
+            "position_usd": "999999",
+            "max_slippage_bps": 999,
+            "stop_loss_bps": 999,
+            "take_profit_bps": 999,
+            "entry_conditions": ["buy_now"],
+            "ttl_seconds": 999999,
+            "projected_daily_trade_count": 1,
+            "investment_thesis": "invalid output",
+            "confidence_score": "0.82",
+            "agent_trace_steps": [
+                {
+                    "agent": "portfolio_manager",
+                    "summary": "invalid output",
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                }
+            ],
+        }
+
+
+class _MarketOrderLikeConditionRunner:
+    def run(self, context: DecisionContext) -> dict[str, object]:
+        return {
+            "pair": context.strategy_constraints.pair,
+            "dex": context.strategy_constraints.dex,
+            "position_usd": "1200",
+            "max_slippage_bps": 20,
+            "stop_loss_bps": 120,
+            "take_profit_bps": 260,
+            "entry_conditions": ["buy_now:immediate"],
+            "ttl_seconds": 3600,
+            "projected_daily_trade_count": 1,
+            "investment_thesis": "invalid market-order-like condition",
+            "confidence_score": "0.82",
+            "agent_trace_steps": [
+                {
+                    "agent": "portfolio_manager",
+                    "summary": "invalid market-order-like condition",
                     "timestamp": datetime.now(tz=timezone.utc).isoformat(),
                 }
             ],
@@ -134,6 +185,22 @@ class CryptoAgentsAdapterTestCase(unittest.TestCase):
         self.assertNotIn("investment_thesis", result.trade_intent.model_dump(mode="python"))
         self.assertEqual(result.decision_meta.investment_thesis, "趋势仍在，回撤分批布局。")
         self.assertGreaterEqual(len(result.agent_trace.steps), 1)
+
+    def test_adapter_rejects_output_when_constraints_are_violated(self) -> None:
+        adapter = CryptoAgentsAdapter(runner=_ConstraintBreakingRunner())
+        with self.assertRaises(CryptoAgentsConstraintMismatchError):
+            adapter.build_decision_or_raise(
+                decision_context=_decision_context(),
+                strategy_template=_strategy_template(),
+            )
+
+    def test_adapter_rejects_market_order_like_entry_condition_even_with_colon(self) -> None:
+        adapter = CryptoAgentsAdapter(runner=_MarketOrderLikeConditionRunner())
+        with self.assertRaises(CryptoAgentsConstraintMismatchError):
+            adapter.build_decision_or_raise(
+                decision_context=_decision_context(),
+                strategy_template=_strategy_template(),
+            )
 
 
 if __name__ == "__main__":

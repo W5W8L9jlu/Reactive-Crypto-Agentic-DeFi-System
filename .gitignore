@@ -3,8 +3,13 @@ __pycache__/
 .pytest_cache/
 .worktrees/
 .foundry-cache/
+.tmp/
+.npm-cache/
 out/
 cache/
+artifacts/
+eval_results/
+docs/acceptance/**/artifacts/screenshots/
 backend/contracts/out/
 backend/contracts/cache/
 external_refs/

@@ -29,8 +29,6 @@ from backend.cli.runtime_store import CLIRuntimeStore, IntentArtifactRecord
 from backend.cli.views.alerts import AlertSeverity, AlertView
 from backend.decision import (
     CryptoAgentsAdapter,
-    CryptoAgentsRunnerDependencyError,
-    CryptoAgentsStructuredOutputMissingError,
     MainChainRequest,
     MainChainService,
     ProductionCryptoAgentsRunner,
@@ -113,58 +111,8 @@ def build_contract_gateway_from_web3(
 def build_cryptoagents_decision_adapter(*, runner: Any | None = None) -> CryptoAgentsAdapter:
     if runner is not None:
         return CryptoAgentsAdapter(runner=runner)
-    primary_runner = ProductionCryptoAgentsRunner()
-    if _decision_strict_enabled():
-        return CryptoAgentsAdapter(runner=primary_runner)
-    return CryptoAgentsAdapter(
-        runner=_ResilientCryptoAgentsRunner(
-            primary=primary_runner,
-            fallback=_DeterministicFallbackRunner(),
-        )
-    )
-
-
-class _ResilientCryptoAgentsRunner:
-    def __init__(self, *, primary: Any, fallback: Any) -> None:
-        self._primary = primary
-        self._fallback = fallback
-
-    def run(self, context: DecisionContext) -> dict[str, Any]:
-        try:
-            return self._primary.run(context)
-        except (
-            CryptoAgentsRunnerDependencyError,
-            CryptoAgentsStructuredOutputMissingError,
-            ImportError,
-            ModuleNotFoundError,
-        ):
-            return self._fallback.run(context)
-
-
-class _DeterministicFallbackRunner:
-    def run(self, context: DecisionContext) -> dict[str, Any]:
-        pair = context.strategy_constraints.pair
-        dex = context.strategy_constraints.dex
-        return {
-            "pair": pair,
-            "dex": dex,
-            "position_usd": str(context.strategy_constraints.max_position_usd),
-            "max_slippage_bps": context.strategy_constraints.max_slippage_bps,
-            "stop_loss_bps": context.strategy_constraints.stop_loss_bps,
-            "take_profit_bps": context.strategy_constraints.take_profit_bps,
-            "entry_conditions": ["price_below:3000"],
-            "ttl_seconds": context.strategy_constraints.ttl_seconds,
-            "projected_daily_trade_count": min(1, context.strategy_constraints.daily_trade_limit),
-            "investment_thesis": "Fallback runner generated conditional intent from strategy constraints.",
-            "confidence_score": "0.5",
-            "agent_trace_steps": [
-                {
-                    "agent": "fallback_runner",
-                    "summary": "Generated deterministic output because production runner was unavailable.",
-                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-                }
-            ],
-        }
+    _decision_strict_enabled()
+    return CryptoAgentsAdapter(runner=ProductionCryptoAgentsRunner())
 
 
 def _decision_strict_enabled() -> bool:
@@ -348,47 +296,12 @@ def _build_main_chain_request_for_strategy(
     contract_gateway: ContractGateway | None,
     dry_run: bool = False,
 ) -> MainChainRequest:
-    if os.environ.get(RUNTIME_MAIN_CHAIN_REQUEST_JSON_ENV):
-        return _load_main_chain_request_from_runtime_env(context_id=strategy_id)
-
+    _ = contract_gateway, dry_run
     try:
-        strategy_record = runtime_store.get_strategy(strategy_id)
+        runtime_store.get_strategy(strategy_id)
     except KeyError as exc:
         raise CLISurfaceInputError(str(exc)) from exc
-
-    strategy_template = StrategyTemplate.model_validate(strategy_record.template)
-    constraints = StrategyConstraints.model_validate(strategy_record.constraints)
-    intent_id = _build_intent_id(strategy_id=strategy_id)
-    trade_intent_id = f"ti-{strategy_id}-{datetime.now(tz=timezone.utc).strftime('%Y%m%d%H%M%S')}"
-
-    chain_state = _build_chain_state(
-        contract_gateway=contract_gateway,
-        allow_fallback=dry_run,
-    )
-    rpc_snapshot = _build_rpc_snapshot(chain_state=chain_state)
-    registration_context = _build_registration_context(
-        strategy_record=strategy_record,
-        intent_id=intent_id,
-        contract_gateway=contract_gateway,
-    )
-
-    return MainChainRequest(
-        decision_context=_build_decision_context(
-            strategy_id=strategy_id,
-            constraints=constraints,
-        ),
-        strategy_template=strategy_template,
-        rpc_state_snapshot=rpc_snapshot,
-        chain_state=chain_state,
-        registration_context=registration_context,
-        reactive_trigger=ReactiveTrigger(
-            trigger_type="entry",
-            intent_id=intent_id,
-            trade_intent_id=trade_intent_id,
-            metadata={"observed_out": _resolve_observed_out(dry_run=dry_run)},
-        ),
-        memo_brief=strategy_record.memo_brief,
-    )
+    return _load_main_chain_request_from_runtime_env(context_id=strategy_id)
 
 
 def _persist_intent_artifact(
@@ -466,6 +379,9 @@ def build_production_services(
     decision_dry_run_handler: Any | None = None,
     decision_missing_reason: str | None = None,
     force_close_missing_reason: str | None = None,
+    monitor_alerts_handler: Any | None = None,
+    monitor_shadow_status_handler: Any | None = None,
+    monitor_missing_reason: str | None = None,
 ) -> "CLISurfaceServices":
     from backend.cli.app import CLISurfaceServices
 
@@ -561,7 +477,8 @@ def build_production_services(
         except KeyError as exc:
             raise CLISurfaceInputError(str(exc)) from exc
         approval_payload = artifact.approval_payload
-        resolved_raw_json = machine_truth_json or artifact.machine_truth_json
+        _ = machine_truth_json
+        resolved_raw_json = artifact.machine_truth_json
         return show_approval(
             trade_intent=TradeIntent.model_validate(approval_payload["trade_intent"]),
             execution_plan=ValidationExecutionPlan.model_validate(approval_payload["execution_plan"]),
@@ -576,6 +493,10 @@ def build_production_services(
             artifact = store.get_intent_artifact(intent_id)
         except KeyError as exc:
             raise CLISurfaceInputError(str(exc)) from exc
+        if artifact.approval_status != "pending":
+            raise CLISurfaceInputError(
+                f"approval transition not allowed: {artifact.approval_status} -> approved"
+            )
         approval_payload = artifact.approval_payload
         result = approve_intent(
             trade_intent=TradeIntent.model_validate(approval_payload["trade_intent"]),
@@ -591,6 +512,10 @@ def build_production_services(
             artifact = store.get_intent_artifact(intent_id)
         except KeyError as exc:
             raise CLISurfaceInputError(str(exc)) from exc
+        if artifact.approval_status != "pending":
+            raise CLISurfaceInputError(
+                f"approval transition not allowed: {artifact.approval_status} -> rejected"
+            )
         approval_payload = artifact.approval_payload
         result = reject_intent(
             trade_intent=TradeIntent.model_validate(approval_payload["trade_intent"]),
@@ -640,45 +565,42 @@ def build_production_services(
         artifact = _get_artifact_or_raise(store, intent_id)
         return artifact.export_memo
 
-    def monitor_alerts(critical_only: bool) -> list[AlertView]:
-        alerts: list[AlertView] = []
-        for strategy in store.list_strategies():
-            _ = strategy  # keep explicit iteration for future per-strategy monitor hooks
-        for row in _list_all_artifacts(store):
-            for item in row.monitor_alerts:
-                severity_raw = str(item.get("severity", "warning")).lower()
-                severity = AlertSeverity.CRITICAL if severity_raw == "critical" else AlertSeverity.WARNING
-                alert = AlertView(
-                    code=str(item.get("code", "SHADOW_MONITOR_GENERIC")),
-                    severity=severity,
-                    message=str(item.get("message", "shadow monitor alert")),
-                    source=str(item.get("source", "shadow-monitor")),
-                    escalation_required=bool(item.get("escalation_required", False)),
-                    intent_id=item.get("intent_id"),
-                    observed_price=_opt_str(item.get("observed_price")),
-                    threshold_price=_opt_str(item.get("threshold_price")),
-                    breach_blocks=item.get("breach_blocks"),
-                    estimated_additional_loss_usd=_opt_str(item.get("estimated_additional_loss_usd")),
-                )
-                if critical_only and alert.severity is not AlertSeverity.CRITICAL:
-                    continue
-                alerts.append(alert)
-        return alerts
+    if monitor_alerts_handler is None:
+        def monitor_alerts(critical_only: bool) -> list[AlertView]:
+            alerts = _build_monitor_alert_views(store)
+            if critical_only:
+                return [item for item in alerts if item.severity is AlertSeverity.CRITICAL]
+            return alerts
+    else:
+        monitor_alerts = monitor_alerts_handler
 
-    def monitor_shadow_status() -> str:
-        all_artifacts = _list_all_artifacts(store)
-        critical_count = sum(
-            1
-            for artifact in all_artifacts
-            for item in artifact.monitor_alerts
-            if str(item.get("severity", "")).lower() == "critical"
-        )
-        payload = {
-            "status": "critical" if critical_count > 0 else "healthy",
-            "tracked_intents": len(all_artifacts),
-            "critical_alerts": critical_count,
-        }
-        return json.dumps(payload, ensure_ascii=False)
+    if monitor_shadow_status_handler is None:
+        def monitor_shadow_status() -> str:
+            artifacts = _list_all_artifacts(store)
+            alerts = _build_monitor_alert_views(store)
+            critical_alerts = sum(1 for item in alerts if item.severity is AlertSeverity.CRITICAL)
+            latest_status = _latest_monitor_status(artifacts)
+            raw_status = str(latest_status.get("status", "")).strip().lower()
+            if critical_alerts > 0:
+                status = "critical"
+            elif raw_status in {"healthy", "warning", "critical"}:
+                status = raw_status
+            elif alerts:
+                status = "warning"
+            else:
+                status = "healthy"
+            payload = {
+                "status": status,
+                "tracked_intents": len(artifacts),
+                "critical_alerts": critical_alerts,
+                "checked_at": datetime.now(tz=timezone.utc).isoformat(),
+                "source": "runtime_store",
+            }
+            if latest_status:
+                payload["latest_monitor_status"] = latest_status
+            return json.dumps(payload, ensure_ascii=False)
+    else:
+        monitor_shadow_status = monitor_shadow_status_handler
 
     def doctor_check(gate: str = "full") -> str:
         resolved_gate = gate.strip().lower()
@@ -692,8 +614,10 @@ def build_production_services(
         proxy_policy_ok = not (runtime_env == RUNTIME_PRODUCTION_NAME and bool(local_proxy_vars))
         llm_env_ready = openai_api_key_present and openai_base_url_present and proxy_policy_ok
         llm_connectivity_ok = False
+        llm_connectivity_checked = False
         llm_connectivity_error = None
-        if llm_env_ready:
+        if llm_env_ready and resolved_gate != "chain":
+            llm_connectivity_checked = True
             llm_connectivity_ok, llm_connectivity_error = _probe_openai_connectivity()
         checks: dict[str, Any] = {
             "db_path": str(store.db_path),
@@ -707,6 +631,7 @@ def build_production_services(
             "local_proxy_vars": local_proxy_vars,
             "proxy_policy_ok": proxy_policy_ok,
             "decision_llm_ready": llm_env_ready,
+            "llm_connectivity_checked": llm_connectivity_checked,
             "llm_connectivity_ok": llm_connectivity_ok,
         }
         if llm_connectivity_error:
@@ -749,7 +674,7 @@ def build_production_services(
             llm_blocked_reasons.append(
                 "local proxy is forbidden in production (remove HTTP_PROXY/HTTPS_PROXY/ALL_PROXY localhost settings)"
             )
-        if checks["decision_llm_ready"] and not checks["llm_connectivity_ok"]:
+        if checks["llm_connectivity_checked"] and not checks["llm_connectivity_ok"]:
             llm_blocked_reasons.append("OPENAI connectivity probe failed")
 
         full_blocked_reasons = chain_blocked_reasons + llm_blocked_reasons
@@ -1031,14 +956,23 @@ def _build_registration_context(
     intent_id: str,
     contract_gateway: ContractGateway | None,
 ) -> RegistrationContext:
-    registration_context = dict(strategy_record.registration_context)
+    registration_context = dict(getattr(strategy_record, "registration_context", {}) or {})
     owner = registration_context.get("owner")
     if not owner and contract_gateway is not None:
         owner = getattr(getattr(contract_gateway, "_client", None), "_tx_sender", None)
+    input_token = registration_context.get("input_token")
+    output_token = registration_context.get("output_token")
+    missing_fields: list[str] = []
     if not owner:
-        owner = "0x0000000000000000000000000000000000000001"
-    input_token = registration_context.get("input_token", "0x0000000000000000000000000000000000000001")
-    output_token = registration_context.get("output_token", "0x0000000000000000000000000000000000000002")
+        missing_fields.append("owner")
+    if not input_token:
+        missing_fields.append("input_token")
+    if not output_token:
+        missing_fields.append("output_token")
+    if missing_fields:
+        raise CLISurfaceInputError(
+            "registration_context missing required fields: " + ", ".join(sorted(missing_fields))
+        )
     return RegistrationContext(
         intent_id=intent_id,
         owner=str(owner),
@@ -1073,10 +1007,52 @@ def _list_all_artifacts(runtime_store: CLIRuntimeStore) -> list[IntentArtifactRe
     return runtime_store.list_intent_artifacts()
 
 
-def _opt_str(value: Any) -> str | None:
-    if value is None:
-        return None
-    return str(value)
+def _latest_monitor_status(artifacts: list[IntentArtifactRecord]) -> dict[str, Any]:
+    for artifact in artifacts:
+        if artifact.monitor_status:
+            return dict(artifact.monitor_status)
+    return {}
+
+
+def _build_monitor_alert_views(runtime_store: CLIRuntimeStore) -> list[AlertView]:
+    alerts: list[AlertView] = []
+    for artifact in _list_all_artifacts(runtime_store):
+        for raw in artifact.monitor_alerts:
+            alerts.append(_coerce_alert_view(raw=raw, default_intent_id=artifact.intent_id))
+    return alerts
+
+
+def _coerce_alert_view(*, raw: dict[str, Any], default_intent_id: str) -> AlertView:
+    severity_raw = str(raw.get("severity", "")).strip().lower()
+    try:
+        severity = AlertSeverity(severity_raw)
+    except ValueError as exc:
+        raise CLISurfaceInputError(f"invalid monitor alert severity: {severity_raw!r}") from exc
+
+    detected_at_raw = raw.get("detected_at")
+    detected_at = None
+    if detected_at_raw is not None:
+        if not isinstance(detected_at_raw, str):
+            raise CLISurfaceInputError("monitor alert detected_at must be ISO datetime string")
+        detected_at = datetime.fromisoformat(detected_at_raw.replace("Z", "+00:00"))
+
+    return AlertView(
+        code=str(raw.get("code", "UNKNOWN")),
+        severity=severity,
+        message=str(raw.get("message", "")),
+        source=str(raw.get("source", "shadow_monitor")),
+        escalation_required=bool(raw.get("escalation_required", False)),
+        intent_id=str(raw.get("intent_id", default_intent_id)),
+        observed_price=str(raw["observed_price"]) if "observed_price" in raw else None,
+        threshold_price=str(raw["threshold_price"]) if "threshold_price" in raw else None,
+        breach_blocks=int(raw["breach_blocks"]) if "breach_blocks" in raw and raw["breach_blocks"] is not None else None,
+        estimated_additional_loss_usd=(
+            str(raw["estimated_additional_loss_usd"])
+            if "estimated_additional_loss_usd" in raw and raw["estimated_additional_loss_usd"] is not None
+            else None
+        ),
+        detected_at=detected_at,
+    )
 
 
 def _to_jsonable(value: Any) -> Any:

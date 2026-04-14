@@ -37,6 +37,22 @@ class _FakeGraph:
         return self._final_state, self._signal
 
 
+class _FakeProjector:
+    def __init__(self, *, result: dict[str, object]) -> None:
+        self._result = result
+        self.calls: list[tuple[DecisionContext, dict[str, object], object]] = []
+
+    def project(
+        self,
+        *,
+        decision_context: DecisionContext,
+        final_state: dict[str, object],
+        signal: object,
+    ) -> dict[str, object]:
+        self.calls.append((decision_context, final_state, signal))
+        return dict(self._result)
+
+
 def _decision_context() -> DecisionContext:
     return DecisionContext(
         market_trend=MarketTrend(
@@ -124,6 +140,7 @@ class ProductionCryptoAgentsRunnerTestCase(unittest.TestCase):
                     {
                         "CRYPTOAGENTS_DEEP_THINK_LLM": "gpt-5.4",
                         "CRYPTOAGENTS_QUICK_THINK_LLM": "gpt-5.4-mini",
+                        "OPENAI_BASE_URL": "",
                     },
                     clear=False,
                 ):
@@ -175,6 +192,7 @@ class ProductionCryptoAgentsRunnerTestCase(unittest.TestCase):
                     {
                         "CRYPTOAGENTS_LLM_TIMEOUT_SECONDS": "45",
                         "CRYPTOAGENTS_LLM_MAX_RETRIES": "6",
+                        "OPENAI_BASE_URL": "",
                     },
                     clear=False,
                 ):
@@ -212,11 +230,81 @@ class ProductionCryptoAgentsRunnerTestCase(unittest.TestCase):
             with patch("backend.decision.adapters.cryptoagents_runner.importlib.import_module", side_effect=_fake_import):
                 with patch.dict(
                     os.environ,
-                    {"CRYPTOAGENTS_LLM_TIMEOUT_SECONDS": "0"},
+                    {
+                        "CRYPTOAGENTS_LLM_TIMEOUT_SECONDS": "0",
+                        "OPENAI_BASE_URL": "",
+                    },
                     clear=False,
                 ):
                     with self.assertRaises(CryptoAgentsRunnerDependencyError):
                         _load_default_graph()
+
+    def test_load_default_graph_applies_embedding_model_override_for_verified_relay(self) -> None:
+        captured_embedding_model: dict[str, str] = {}
+
+        class _CaptureTradingGraph:
+            def __init__(self, *, selected_analysts, debug, config):
+                _ = selected_analysts, debug, config
+
+            def propagate(self, company_name: str, trade_date: str):
+                _ = company_name, trade_date
+                return {}, None
+
+        class _FakeConfigModule:
+            CRYPTO_CONFIG = {}
+
+        class _FakeEmbeddingsClient:
+            @staticmethod
+            def create(*, model: str, input: str):
+                captured_embedding_model["model"] = model
+                _ = input
+                return type(
+                    "_EmbeddingResponse",
+                    (),
+                    {"data": [type("_EmbeddingItem", (), {"embedding": [0.1, 0.2, 0.3]})()]},
+                )()
+
+        class _FakeMemory:
+            def __init__(self, name):
+                _ = name
+                self.client = type("_OpenAIClient", (), {"embeddings": _FakeEmbeddingsClient()})()
+
+            def get_embedding(self, text):
+                _ = text
+                return []
+
+        class _FakeMemoryModule:
+            FinancialSituationMemory = _FakeMemory
+
+        class _FakeTradingModule:
+            TradingAgentsGraph = _CaptureTradingGraph
+            ChatOpenAI = object
+
+        def _fake_import(name: str):
+            if name == "cryptoagents.graph.trading_graph":
+                return _FakeTradingModule
+            if name == "cryptoagents.config":
+                return _FakeConfigModule
+            if name == "cryptoagents.agents.utils.memory":
+                return _FakeMemoryModule
+            raise AssertionError(f"unexpected import: {name}")
+
+        with patch("backend.decision.adapters.cryptoagents_runner._inject_cryptoagents_ref_path"):
+            with patch("backend.decision.adapters.cryptoagents_runner.importlib.import_module", side_effect=_fake_import):
+                with patch.dict(
+                    os.environ,
+                    {
+                        "OPENAI_BASE_URL": "https://api.ofox.ai/v1",
+                        "CRYPTOAGENTS_EMBEDDING_MODEL": "openai/text-embedding-3-small",
+                    },
+                    clear=False,
+                ):
+                    _load_default_graph()
+                    memory = _FakeMemory("unit-test-memory")
+                    embedding = memory.get_embedding("market context")
+
+        self.assertEqual(captured_embedding_model["model"], "openai/text-embedding-3-small")
+        self.assertEqual(embedding, [0.1, 0.2, 0.3])
 
     def test_runner_calls_real_graph_port_and_extracts_structured_decision(self) -> None:
         structured_output = {
@@ -253,10 +341,128 @@ class ProductionCryptoAgentsRunnerTestCase(unittest.TestCase):
         self.assertEqual(output, structured_output)
         self.assertEqual(fake_graph.calls, [("ETH", "2026-01-01")])
 
+    def test_runner_passes_serialized_decision_context_when_graph_supports_it(self) -> None:
+        structured_output = {
+            "pair": "ETH/USDC",
+            "dex": "uniswap_v3",
+            "position_usd": "1200",
+            "max_slippage_bps": 20,
+            "stop_loss_bps": 90,
+            "take_profit_bps": 250,
+            "entry_conditions": ["price_below:3000"],
+            "ttl_seconds": 3600,
+            "projected_daily_trade_count": 1,
+            "investment_thesis": "context aware decision",
+            "confidence_score": "0.81",
+            "agent_trace_steps": [
+                {
+                    "agent": "portfolio_manager",
+                    "summary": "uses injected decision_context",
+                    "timestamp": "2026-01-01T00:00:00+00:00",
+                }
+            ],
+        }
+        captured: dict[str, object] = {}
+
+        class _GraphWithDecisionContext:
+            def propagate(self, symbol: str, trade_date: str, decision_context=None):
+                captured["symbol"] = symbol
+                captured["trade_date"] = trade_date
+                captured["decision_context"] = decision_context
+                return {"structured_decision": structured_output}, None
+
+        runner = ProductionCryptoAgentsRunner(
+            graph_factory=lambda: _GraphWithDecisionContext(),
+            as_of_date_provider=lambda: date(2026, 1, 1),
+        )
+
+        output = runner.run(_decision_context())
+
+        self.assertEqual(output["investment_thesis"], "context aware decision")
+        self.assertEqual(captured["symbol"], "ETH")
+        self.assertEqual(captured["trade_date"], "2026-01-01")
+        decision_context = captured["decision_context"]
+        self.assertIsInstance(decision_context, dict)
+        self.assertEqual(decision_context["context_id"], "ctx-001")
+        self.assertEqual(decision_context["strategy_constraints"]["pair"], "ETH/USDC")
+
     def test_runner_rejects_unstructured_graph_output(self) -> None:
         fake_graph = _FakeGraph(
-            final_state={"final_trade_decision": "BUY"},
+            final_state="free-text-without-structured-state",
+            signal=None,
+        )
+        runner = ProductionCryptoAgentsRunner(
+            graph_factory=lambda: fake_graph,
+            as_of_date_provider=lambda: date(2026, 1, 1),
+        )
+
+        with self.assertRaises(CryptoAgentsStructuredOutputMissingError):
+            runner.run(_decision_context())
+
+    def test_runner_projects_free_text_graph_output_into_structured_decision(self) -> None:
+        fake_graph = _FakeGraph(
+            final_state={
+                "market_report": "trend up",
+                "sentiment_report": "positive",
+                "news_report": "ETF inflow",
+                "fundamentals_report": "TVL rising",
+                "final_trade_decision": "Buy on pullback with tight risk.",
+            },
             signal="BUY",
+        )
+        fake_projector = _FakeProjector(
+            result={
+                "pair": "ETH/USDC",
+                "dex": "uniswap_v3",
+                "position_usd": "1000",
+                "max_slippage_bps": 20,
+                "stop_loss_bps": 100,
+                "take_profit_bps": 250,
+                "entry_conditions": ["price_below:3000"],
+                "ttl_seconds": 3600,
+                "projected_daily_trade_count": 1,
+                "investment_thesis": "pullback entry",
+                "confidence_score": "0.80",
+                "agent_trace_steps": [
+                    {
+                        "agent": "portfolio_manager",
+                        "summary": "projected fallback",
+                        "timestamp": "2026-01-01T00:00:00+00:00",
+                    }
+                ],
+            }
+        )
+        runner = ProductionCryptoAgentsRunner(
+            graph_factory=lambda: fake_graph,
+            as_of_date_provider=lambda: date(2026, 1, 1),
+            projector=fake_projector,
+        )
+
+        output = runner.run(_decision_context())
+
+        self.assertEqual(output["pair"], "ETH/USDC")
+        self.assertEqual(output["projected_daily_trade_count"], 1)
+        self.assertEqual(len(fake_projector.calls), 1)
+
+    def test_runner_raises_parse_error_when_projector_returns_missing_fields(self) -> None:
+        fake_graph = _FakeGraph(
+            final_state={"final_trade_decision": "Buy on pullback with tight risk."},
+            signal="BUY",
+        )
+        fake_projector = _FakeProjector(result={"pair": "ETH/USDC"})
+        runner = ProductionCryptoAgentsRunner(
+            graph_factory=lambda: fake_graph,
+            as_of_date_provider=lambda: date(2026, 1, 1),
+            projector=fake_projector,
+        )
+
+        with self.assertRaises(CryptoAgentsStructuredOutputMissingError):
+            runner.run(_decision_context())
+
+    def test_runner_rejects_signal_only_projection_input(self) -> None:
+        fake_graph = _FakeGraph(
+            final_state={},
+            signal="SELL",
         )
         runner = ProductionCryptoAgentsRunner(
             graph_factory=lambda: fake_graph,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -40,6 +41,7 @@ class PortfolioManagerOutput(BaseModel):
     projected_daily_trade_count: int = Field(ge=0, default=0)
     investment_thesis: str = Field(min_length=1)
     confidence_score: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    decision_source: Literal["production", "fallback"] = "production"
     agent_trace_steps: tuple[AgentTraceStep, ...] = Field(min_length=1)
 
 

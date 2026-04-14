@@ -112,6 +112,11 @@ class Phase1GateCLITests(unittest.TestCase):
             runtime_store=self.store,
             decision_run_handler=lambda strategy_id: strategy_id,
             decision_dry_run_handler=lambda strategy_id: strategy_id,
+            monitor_alerts_handler=lambda _critical_only: [],
+            monitor_shadow_status_handler=lambda: json.dumps(
+                {"status": "healthy", "tracked_intents": 1, "critical_alerts": 0},
+                ensure_ascii=False,
+            ),
         )
 
         payload = json.loads(services.monitor_shadow_status())

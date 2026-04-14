@@ -114,6 +114,28 @@ class CLIDoctorTests(unittest.TestCase):
         self.assertEqual(payload["status"], payload["full_status"])
         self.assertEqual(payload["blocked_reasons"], [])
 
+    def test_doctor_gate_chain_does_not_probe_llm_connectivity(self) -> None:
+        with TemporaryDirectory() as tmp_dir:
+            artifact_path = Path(tmp_dir) / "artifact.json"
+            artifact_path.write_text("{}", encoding="utf-8")
+            env = {
+                "REACTIVE_CLI_DB_PATH": str(Path(tmp_dir) / "cli_state.db"),
+                "SEPOLIA_RPC_URL": "http://127.0.0.1:8545",
+                "SEPOLIA_PRIVATE_KEY": "0xabc",
+                "REACTIVE_INVESTMENT_COMPILER_ADDRESS": "0xdef",
+                "REACTIVE_INVESTMENT_COMPILER_ARTIFACT": str(artifact_path),
+                "OPENAI_API_KEY": "test-key",
+                "OPENAI_BASE_URL": "https://api.openai.com/v1",
+            }
+            with patch(
+                "backend.cli.wiring._probe_openai_connectivity",
+                side_effect=AssertionError("chain gate must not probe llm connectivity"),
+            ):
+                payload = self._doctor_payload(env=env, gate="chain", contract_gateway=object())
+
+        self.assertEqual(payload["gate"], "chain")
+        self.assertEqual(payload["gate_status"], "ok")
+
     def test_doctor_cli_accepts_gate_option(self) -> None:
         with TemporaryDirectory() as tmp_dir:
             env = {

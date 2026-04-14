@@ -87,10 +87,46 @@ class CryptoAgentsAdapter:
         decision_context: DecisionContext,
         portfolio_output: PortfolioManagerOutput,
     ) -> None:
+        constraints = decision_context.strategy_constraints
         if portfolio_output.pair != decision_context.strategy_constraints.pair:
             raise CryptoAgentsConstraintMismatchError("portfolio output pair must match decision_context.strategy_constraints.pair")
         if portfolio_output.dex != decision_context.strategy_constraints.dex:
             raise CryptoAgentsConstraintMismatchError("portfolio output dex must match decision_context.strategy_constraints.dex")
+        if portfolio_output.position_usd > constraints.max_position_usd:
+            raise CryptoAgentsConstraintMismatchError(
+                "portfolio output position_usd exceeds decision_context.strategy_constraints.max_position_usd"
+            )
+        if portfolio_output.max_slippage_bps > constraints.max_slippage_bps:
+            raise CryptoAgentsConstraintMismatchError(
+                "portfolio output max_slippage_bps exceeds decision_context.strategy_constraints.max_slippage_bps"
+            )
+        if portfolio_output.stop_loss_bps > constraints.stop_loss_bps:
+            raise CryptoAgentsConstraintMismatchError(
+                "portfolio output stop_loss_bps exceeds decision_context.strategy_constraints.stop_loss_bps"
+            )
+        if portfolio_output.take_profit_bps > constraints.take_profit_bps:
+            raise CryptoAgentsConstraintMismatchError(
+                "portfolio output take_profit_bps exceeds decision_context.strategy_constraints.take_profit_bps"
+            )
+        if portfolio_output.ttl_seconds > constraints.ttl_seconds:
+            raise CryptoAgentsConstraintMismatchError(
+                "portfolio output ttl_seconds exceeds decision_context.strategy_constraints.ttl_seconds"
+            )
+        for item in portfolio_output.entry_conditions:
+            text = item.strip().lower()
+            if ":" not in text:
+                raise CryptoAgentsConstraintMismatchError(
+                    "portfolio output entry_conditions must use conditional expression format"
+                )
+            left, right = text.split(":", maxsplit=1)
+            if not left or not right:
+                raise CryptoAgentsConstraintMismatchError(
+                    "portfolio output entry_conditions must use non-empty conditional expression format"
+                )
+            if any(token in text for token in ("buy_now", "sell_now", "market", "immediate")):
+                raise CryptoAgentsConstraintMismatchError(
+                    "portfolio output entry_conditions must not contain market-order style semantics"
+                )
 
 
 __all__ = [

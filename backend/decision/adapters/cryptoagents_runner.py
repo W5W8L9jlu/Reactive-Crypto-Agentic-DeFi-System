@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import os
 import sys
 import time
@@ -11,6 +12,10 @@ from typing import Any, Protocol
 from backend.data.context_builder.models import DecisionContext
 
 from .cryptoagents_adapter import CryptoAgentsOutputParseError
+from .cryptoagents_projector import (
+    CryptoAgentsProjectorPort,
+    DefaultCryptoAgentsProjector,
+)
 
 
 _REQUIRED_STRUCTURED_KEYS = frozenset(
@@ -23,6 +28,7 @@ _REQUIRED_STRUCTURED_KEYS = frozenset(
         "take_profit_bps",
         "entry_conditions",
         "ttl_seconds",
+        "projected_daily_trade_count",
         "investment_thesis",
         "confidence_score",
         "agent_trace_steps",
@@ -44,6 +50,17 @@ _RETRYABLE_RUNTIME_EXCEPTION_NAMES = frozenset(
         "WriteTimeout",
     }
 )
+
+_VERIFIED_RELAY_BASE_URLS = frozenset(
+    {
+        "https://api.ofox.ai",
+        "https://api.ofox.ai/v1",
+        "https://codex.ai02.cn",
+        "https://codex.ai02.cn/v1",
+    }
+)
+
+_DEFAULT_RELAY_EMBEDDING_MODEL = "openai/text-embedding-3-small"
 
 
 class CryptoAgentsRunnerDependencyError(CryptoAgentsOutputParseError):
@@ -69,6 +86,7 @@ class ProductionCryptoAgentsRunner:
         runtime_retry_attempts: int | None = None,
         retry_backoff_seconds: float | None = None,
         sleep_fn: Any | None = None,
+        projector: CryptoAgentsProjectorPort | None = None,
     ) -> None:
         self._graph_factory = graph_factory or _load_default_graph
         self._as_of_date_provider = as_of_date_provider or (lambda: datetime.now(tz=timezone.utc).date())
@@ -77,6 +95,7 @@ class ProductionCryptoAgentsRunner:
             retry_backoff_seconds if retry_backoff_seconds is not None else _retry_backoff_seconds_from_env()
         )
         self._sleep_fn = sleep_fn or time.sleep
+        self._projector = projector or DefaultCryptoAgentsProjector()
 
     def run(self, context: DecisionContext) -> dict[str, Any]:
         symbol = _pair_to_symbol(context.strategy_constraints.pair)
@@ -85,15 +104,39 @@ class ProductionCryptoAgentsRunner:
             raise CryptoAgentsStructuredOutputMissingError("as_of_date_provider must return datetime.date")
 
         graph = self._graph_factory()
+        serialized_context = _serialize_decision_context(context)
         last_runtime_error: Exception | None = None
         for attempt in range(1, self._runtime_retry_attempts + 1):
             try:
-                propagated = graph.propagate(symbol, trade_date.isoformat())
+                if _graph_accepts_decision_context(graph):
+                    propagated = graph.propagate(
+                        symbol,
+                        trade_date.isoformat(),
+                        decision_context=serialized_context,
+                    )
+                else:
+                    propagated = graph.propagate(symbol, trade_date.isoformat())
                 if isinstance(propagated, tuple) and len(propagated) == 2:
                     final_state, signal = propagated
                 else:
                     final_state, signal = propagated, None
-                return _extract_structured_output(final_state=final_state, signal=signal)
+                structured = _extract_structured_output(final_state=final_state, signal=signal)
+                if structured is None:
+                    if not isinstance(final_state, dict):
+                        raise CryptoAgentsStructuredOutputMissingError(
+                            "CryptoAgents graph output must provide a JSON-like final_state for projection."
+                        )
+                    try:
+                        structured = self._projector.project(
+                            decision_context=context,
+                            final_state=final_state,
+                            signal=signal,
+                        )
+                    except Exception as exc:
+                        raise CryptoAgentsStructuredOutputMissingError(
+                            "CryptoAgents projector failed to build structured decision output."
+                        ) from exc
+                return _validate_required_structured_keys(structured)
             except Exception as exc:  # pragma: no cover - branch validated by name-based tests
                 if not _is_retryable_runtime_error(exc):
                     raise
@@ -129,6 +172,7 @@ def _load_default_graph() -> CryptoAgentsGraphPort:
     if quick_model:
         config["quick_think_llm"] = quick_model
     _apply_chat_openai_runtime_overrides(module)
+    _apply_embedding_runtime_overrides()
     return trading_graph_cls(
         selected_analysts=["market", "social", "news", "fundamentals"],
         debug=False,
@@ -136,7 +180,7 @@ def _load_default_graph() -> CryptoAgentsGraphPort:
     )
 
 
-def _extract_structured_output(*, final_state: Any, signal: Any) -> dict[str, Any]:
+def _extract_structured_output(*, final_state: Any, signal: Any) -> dict[str, Any] | None:
     candidates: list[Any] = []
     if isinstance(final_state, dict):
         candidates.append(final_state.get("structured_decision"))
@@ -149,9 +193,16 @@ def _extract_structured_output(*, final_state: Any, signal: Any) -> dict[str, An
         if isinstance(candidate, dict) and _REQUIRED_STRUCTURED_KEYS.issubset(candidate.keys()):
             return dict(candidate)
 
-    raise CryptoAgentsStructuredOutputMissingError(
-        "CryptoAgents graph output must include a structured decision dict with conditional intent fields."
-    )
+    return None
+
+
+def _validate_required_structured_keys(structured: dict[str, Any]) -> dict[str, Any]:
+    missing = sorted(_REQUIRED_STRUCTURED_KEYS - set(structured.keys()))
+    if missing:
+        raise CryptoAgentsStructuredOutputMissingError(
+            "CryptoAgents graph output must include required fields: " + ", ".join(missing)
+        )
+    return structured
 
 
 def _pair_to_symbol(pair: str) -> str:
@@ -161,6 +212,24 @@ def _pair_to_symbol(pair: str) -> str:
     if not base:
         raise CryptoAgentsStructuredOutputMissingError("cannot derive base symbol from pair")
     return base
+
+
+def _serialize_decision_context(context: DecisionContext) -> dict[str, Any]:
+    payload = context.model_dump(mode="json")
+    payload.setdefault("generated_at", datetime.now(tz=timezone.utc).isoformat())
+    return payload
+
+
+def _graph_accepts_decision_context(graph: Any) -> bool:
+    propagate = getattr(graph, "propagate", None)
+    if propagate is None:
+        return False
+    for parameter in inspect.signature(propagate).parameters.values():
+        if parameter.name == "decision_context":
+            return True
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            return True
+    return False
 
 
 def _inject_cryptoagents_ref_path() -> None:
@@ -237,6 +306,61 @@ def _apply_chat_openai_runtime_overrides(module: Any) -> None:
         return original_chat_openai(*args, **kwargs)
 
     module.ChatOpenAI = _chat_openai_factory
+
+
+def _apply_embedding_runtime_overrides() -> None:
+    embedding_model = _resolve_embedding_model_override()
+    if embedding_model is None:
+        return
+    try:
+        memory_module = importlib.import_module("cryptoagents.agents.utils.memory")
+    except Exception as exc:
+        raise CryptoAgentsRunnerDependencyError(
+            "CryptoAgents memory module import failed while applying embedding model override."
+        ) from exc
+    memory_cls = getattr(memory_module, "FinancialSituationMemory", None)
+    if memory_cls is None:
+        raise CryptoAgentsRunnerDependencyError(
+            "FinancialSituationMemory is missing in cryptoagents.agents.utils.memory."
+        )
+
+    def _get_embedding(self: Any, text: str) -> Any:
+        response = self.client.embeddings.create(model=embedding_model, input=text)
+        return response.data[0].embedding
+
+    memory_cls.get_embedding = _get_embedding
+
+
+def _resolve_embedding_model_override() -> str | None:
+    base_url = _normalize_openai_base_url()
+    configured = os.environ.get("CRYPTOAGENTS_EMBEDDING_MODEL")
+    if configured is None or configured.strip() == "":
+        if not _is_verified_relay_base_url(base_url):
+            return None
+        model = _DEFAULT_RELAY_EMBEDDING_MODEL
+    else:
+        model = configured.strip()
+    if _is_verified_relay_base_url(base_url) and "/" not in model:
+        raise CryptoAgentsRunnerDependencyError(
+            "CRYPTOAGENTS_EMBEDDING_MODEL must be provider-prefixed when OPENAI_BASE_URL uses a verified relay."
+        )
+    return model
+
+
+def _normalize_openai_base_url() -> str | None:
+    raw = os.environ.get("OPENAI_BASE_URL")
+    if raw is None:
+        return None
+    normalized = raw.strip().rstrip("/")
+    if normalized == "":
+        return None
+    return normalized
+
+
+def _is_verified_relay_base_url(base_url: str | None) -> bool:
+    if base_url is None:
+        return False
+    return base_url in _VERIFIED_RELAY_BASE_URLS
 
 
 def _optional_positive_float_env(env_name: str) -> float | None:
