@@ -1,7 +1,7 @@
 # Reactive Crypto Agentic DeFi System Prototype
 
-**An end-to-end, runnable prototype for AI-assisted, safety-bounded DeFi workflows.**  
-**一个可运行的端到端原型，用于构建具备安全边界的 AI 辅助 DeFi 工作流。**
+**An end-to-end, runnable prototype for AI-assisted, safety-bounded DeFi system.**  
+**一个可运行的端到端原型，用于构建具备安全边界的 AI 辅助 DeFi 系统。**
 
 ## Overview / 项目简介
 
