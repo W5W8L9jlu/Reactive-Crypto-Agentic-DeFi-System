@@ -45,6 +45,36 @@ This is the prototype story of the system: an operator initiates a workflow, the
 
 这就是系统的 prototype 叙事：操作者发起流程，系统构建结构化上下文，AI 组件生成结构化 strategy 与 trade intent，校验层负责施加边界，执行在前置阶段完成编译，运行时逻辑则根据条件触发，而不是在实时市场中临场自由生成动作。
 
+## Runtime Evidence / 实际运行效果
+
+The following checkpoints are extracted from an actual run record (`实际运行效果_已加图注.docx`) and reflect the operator-visible flow across decision, approval, execution, and export.
+
+以下检查点来自一次真实运行记录（`实际运行效果_已加图注.docx`），用于展示决策、审批、执行与导出链路在操作者视角下的完整过程。
+
+1. **Initial UI / 初始界面**  
+   Main ReactiveAgents screen shows progress, tool/message panel, and current report context, with the run currently at `decision.dry-run`.  
+   ReactiveAgents 主界面显示流程进度、消息与工具区、当前报告上下文，当前流程运行到 `decision.dry-run`。
+
+2. **Decision Stage (`decision.dry-run`) / 决策阶段（`decision.dry-run`）**  
+   Machine Truth details include strategy intent, trade conditions, risk parameters, and multi-agent reasoning traces.  
+   Machine Truth 详情包含策略意图、交易条件、风控参数以及多代理推理痕迹。
+
+3. **Approval List (`approval.list`) / 审批列表（`approval.list`）**  
+   The pending-approval intent list is queryable, confirming the flow has entered the approval gate.  
+   可查询待审批意图列表，证明流程已进入审批关口。
+
+4. **Approval Detail (`approval.show`) / 审批详情（`approval.show`）**  
+   Approval Battle Card displays target asset, position size, stop-loss/take-profit, TTL, and approval conclusion.  
+   Approval Battle Card 展示标的、仓位、止盈止损、TTL 与审批结论。
+
+5. **Execution Detail (`execution.show`) / 执行详情（`execution.show`）**  
+   Execution output records the intent state transition from `PendingEntry` to `ActivePosition`, plus callback records.  
+   执行输出记录意图状态从 `PendingEntry` 进入 `ActivePosition`，并保留回调记录。
+
+6. **Export Output (`export.memo`) / 导出结果（`export.memo`）**  
+   The system generates an Investment Memo with boundary statements, traceable metadata, and final conclusion text.  
+   系统自动生成 Investment Memo，包含边界声明、可追溯元数据与结论文本。
+
 ## Why This Prototype Matters / 这个原型为什么重要
 
 Most AI trading demos stop at analysis, chat, or loosely structured recommendations. This prototype is interesting because it tries to push one step further: from research output to bounded execution design.
