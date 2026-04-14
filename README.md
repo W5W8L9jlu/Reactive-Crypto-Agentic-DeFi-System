@@ -151,16 +151,11 @@ If you want to work on a specific module, the expected reading order is:
 
 ## Roadmap / 路线图
 
-1. Stabilize typed decision outputs and validation contracts
-1. 稳定结构化决策输出与校验契约
-2. Tighten CLI approval and operator review surfaces
-2. 强化 CLI 审批与操作者复核界面
-3. Complete execution compiler and Reactive-trigger integration
-3. 完成 execution compiler 与 Reactive trigger 集成
-4. Expand monitoring, reconciliation, and export paths
-4. 扩展监控、对账与导出链路
-5. Add richer risk controls and optional cross-chain adapters
-5. 增加更丰富的风险控制与可选跨链适配能力
+1. Stabilize typed decision outputs and validation contracts 稳定结构化决策输出与校验契约
+2. Tighten CLI approval and operator review surfaces 强化 CLI 审批与操作者复核界面
+3. Complete execution compiler and Reactive-trigger integration 完成 execution compiler 与 Reactive trigger 集成
+4. Expand monitoring, reconciliation, and export paths 扩展监控、对账与导出链路
+5. Add richer risk controls and optional cross-chain adapters 增加更丰富的风险控制与可选跨链适配能力
 
 ## Disclaimer / 风险声明
 
