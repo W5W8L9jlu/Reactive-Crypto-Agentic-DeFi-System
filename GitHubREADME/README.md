@@ -1,148 +1,171 @@
-# Reactive Crypto Agentic DeFi System
+# Reactive Crypto Agentic DeFi System Prototype
 
-**A safety-bounded, event-driven blueprint for AI-assisted DeFi execution.**  
-**一个具备安全边界、事件驱动与条件执行约束的 AI 辅助 DeFi 系统蓝图。**
+**An end-to-end, runnable prototype for AI-assisted, safety-bounded DeFi system.**  
+**一个可运行的端到端原型，用于构建具备安全边界的 AI 辅助 DeFi 系统。**
 
 ## Overview / 项目简介
 
-This repository is an architecture-first blueprint for building a reactive, agentic DeFi system with clear decision boundaries, typed execution truth, and runtime safety controls. It is designed around one core idea: AI can help reason, compare, summarize, and form conditional intent, but it should not directly control funds, sign transactions, or improvise final execution payloads.
+This repository can be presented as a runnable end-to-end prototype for AI-assisted DeFi decision and execution workflows. It combines CLI-driven operator flow, multi-agent reasoning, typed decision artifacts, validation gates, execution compilation, and Reactive-style trigger logic into one architecture.
 
-本仓库是一个以架构为先的蓝图，用于构建具备清晰决策边界、结构化执行真相与运行时安全约束的 reactive agentic DeFi 系统。它围绕一个核心思想展开：AI 可以参与研究、比较、总结与条件意图生成，但不应直接控制资金、签名交易，也不应在运行时自由拼装最终执行载荷。
+本仓库可以被呈现为一个可运行的端到端原型，用于承载 AI 辅助 DeFi 决策与执行工作流。它把 CLI 驱动的操作者流程、多 Agent 推理、结构化决策产物、校验关口、执行编译以及 Reactive 风格的触发逻辑组合到同一套架构中。
 
-In its current form, this repository is best understood as an implementation kit and system blueprint rather than a finished trading product. It combines modular knowledge files, implementation contracts, prompt templates, and an evolving Python codebase to make agent-driven DeFi execution more auditable, more constrained, and easier to reason about.
+The prototype is designed to show how an AI-assisted DeFi system can move from research and conditional intent to constrained execution and monitoring without collapsing all responsibility into a single language-model step.
 
-当前仓库更适合被理解为一个 implementation kit 与系统蓝图，而不是已经完成的交易产品。它将模块化知识库、implementation contract、prompt 模板以及逐步演进中的 Python 代码组合在一起，目标是让 agent 驱动的 DeFi 执行更可审计、更受约束，也更容易被工程化理解。
+这个原型的目标，是展示 AI 辅助 DeFi 系统如何从研究与条件意图，推进到受约束的执行与监控，而不是把所有职责都压缩进单次语言模型输出里。
 
-## Why This Project Exists / 为什么做这个项目
+## What You Can Run / 现在可以跑什么
 
-Many agentic trading demos are strong at analysis, but analysis alone is not execution truth. A natural-language thesis can be persuasive while still being unsafe, stale, or impossible to execute under real onchain conditions.
+- A Python package with a CLI entrypoint for operator-facing workflows  
+  一个带有 CLI 入口的 Python package，可用于面向操作者的工作流
 
-很多 agentic trading demo 很擅长“分析”，但分析本身并不等于执行真相。一个自然语言 thesis 即使看起来很有说服力，也可能在真实链上条件下变得不安全、过时，甚至根本无法执行。
+- Modular decision, validation, execution, and monitoring surfaces organized under `backend/`  
+  模块化的决策、校验、执行与监控能力，统一组织在 `backend/` 目录下
 
-This project exists to separate those layers. Research is one layer. Typed intent is another. Validation, approval, compilation, runtime constraints, and monitoring each get their own place in the system. The goal is not to let AI trade freely; the goal is to build a safer path from AI-assisted reasoning to conditional, auditable, bounded execution.
+- Knowledge-driven implementation workflow through `docs/knowledge/`, `docs/contracts/`, and `docs/prompts/`  
+  通过 `docs/knowledge/`、`docs/contracts/` 与 `docs/prompts/` 驱动的知识约束式实现流程
 
-本项目的存在，就是为了把这些层次拆开。研究是一层，结构化意图是一层，校验、审批、编译、运行时约束与监控也各自有独立位置。目标不是让 AI 自由交易，而是搭建一条从 AI 辅助推理走向“条件化、可审计、受边界约束执行”的更安全路径。
+- An architecture that is already shaped as a full decision-to-execution loop, even as individual modules continue to mature  
+  一套已经具备完整“决策到执行”闭环形态的架构，即便其中一些模块仍在持续完善
 
-## Core Principles / 核心原则
-
-- **AI is bounded.** It can generate research, thesis, and conditional intent, but it cannot sign, hold funds, or generate final calldata.  
-  **AI 受边界约束。** 它可以生成研究结论、thesis 与条件意图，但不能签名、托管资金，也不能生成最终 calldata。
-
-- **Machine truth is structured.** Structured JSON is the single source of execution truth. Markdown is an audit excerpt, not the execution truth itself.  
-  **机器真相必须结构化。** 结构化 JSON 是执行真相的唯一来源。Markdown 只是审计摘抄，不是执行真相本身。
-
-- **Execution is conditional.** Onchain actions should be triggered under predefined constraints instead of being treated as free-form market orders.  
-  **执行必须条件化。** 链上动作应在预定义约束下被触发，而不是被当作自由形式的即时下单。
-
-- **RPC is authoritative.** The execution layer trusts RPC truth rather than third-party indexing APIs.  
-  **RPC 是权威执行真相。** 执行层信任 RPC，而不是第三方索引 API。
-
-- **Safety is split across time.** Checks happen both before registration and again at runtime through hard constraints.  
-  **安全检查按时间拆分。** 安全校验既发生在注册前，也通过运行时硬约束再次执行。
-
-- **Three output tracks coexist.** Machine Truth, Audit Markdown, and Investment Memo serve different audiences and must stay separate.  
-  **三轨输出并存。** Machine Truth、Audit Markdown 与 Investment Memo 服务不同对象，必须严格分层。
-
-## System Architecture / 系统架构
+## End-to-End Flow / 端到端流程
 
 ```mermaid
 flowchart LR
-    A["Decision Context"] --> B["Multi-Agent Reasoning"]
-    B --> C["Typed StrategyIntent / TradeIntent"]
-    C --> D["Validation + Approval"]
-    D --> E["Execution Compiler"]
-    E --> F["Reactive Runtime"]
-    F --> G["Shadow Monitor"]
-    C --> H["Audit Markdown / Investment Memo"]
-    D --> H
+    A["CLI / Operator Input"] --> B["Decision Context"]
+    B --> C["Multi-Agent Reasoning"]
+    C --> D["Typed Intents"]
+    D --> E["Validation + Approval"]
+    E --> F["Execution Compiler"]
+    F --> G["Reactive Trigger / Runtime"]
+    G --> H["Execution Records + Monitoring"]
+    D --> I["Audit Markdown / Investment Memo"]
 ```
 
-The system is meant to move from context collection to reasoning, from reasoning to typed intent, and from typed intent to validated and precompiled execution. Reactive components handle event-driven triggering, while shadow monitoring and exported artifacts make the system observable and auditable.
+This is the prototype story of the system: an operator initiates a workflow, the system builds a structured context, AI components produce typed strategy and trade intent, validation enforces boundaries, execution gets compiled ahead of time, and runtime logic reacts to conditions rather than improvising market actions in real time.
 
-系统目标是把流程从上下文采集推进到推理，从推理推进到结构化意图，再从结构化意图推进到经过校验与预编译的执行。Reactive 组件负责事件驱动触发，Shadow Monitor 与导出产物负责保证系统可观测、可审计。
+这就是系统的 prototype 叙事：操作者发起流程，系统构建结构化上下文，AI 组件生成结构化 strategy 与 trade intent，校验层负责施加边界，执行在前置阶段完成编译，运行时逻辑则根据条件触发，而不是在实时市场中临场自由生成动作。
 
-## What Makes It Different / 有何不同
+## Runtime Evidence / 实际运行效果
 
-- **Execution compiler at registration time.** This project pushes execution compilation earlier, so trigger-time behavior is constrained by precompiled rules rather than fresh free-form reasoning.  
-  **在注册时完成执行编译。** 本项目把执行编译前移到注册阶段，让触发时行为由预编译规则约束，而不是依赖新的自由推理。
+The following checkpoints are extracted from an actual run record (`实际运行效果_已加图注.docx`) and reflect the operator-visible flow across decision, approval, execution, and export.
 
-- **Typed intents instead of loose prompts.** Strategy and trade decisions are expected to land in strong typed objects instead of informal prose.  
-  **使用强类型意图，而不是松散提示词结果。** 策略与交易决策应落到强类型对象中，而不是停留在非结构化文本里。
+以下检查点来自一次真实运行记录（`实际运行效果_已加图注.docx`），用于展示决策、审批、执行与导出链路在操作者视角下的完整过程。
 
-- **Validation and approval as first-class modules.** Strategy boundaries, approval surfaces, and pre-registration checks are part of the system design, not afterthoughts.  
-  **把校验与审批视为一等模块。** Strategy boundary、approval surface 与注册前检查是系统设计的一部分，而不是事后补丁。
+1. **Initial UI / 初始界面**  
+   Main ReactiveAgents screen shows progress, tool/message panel, and current report context, with the run currently at `decision.dry-run`.  
+   ReactiveAgents 主界面显示流程进度、消息与工具区、当前报告上下文，当前流程运行到 `decision.dry-run`。
+   
+   ![Initial UI / 初始界面](cli_picture/Initial%20UI.png)
+   *Figure 1 / 图1: Main ReactiveAgents screen overview.*
 
-- **Reactive execution with stricter boundaries.** Reactive callbacks are used for deterministic triggering, not for giving AI free runtime control.  
-  **Reactive 执行但边界更严格。** Reactive callback 用来做确定性触发，而不是把运行时自由控制权交给 AI。
+2. **Decision Stage (`decision.dry-run`) / 决策阶段（`decision.dry-run`）**  
+   Machine Truth details include strategy intent, trade conditions, risk parameters, and multi-agent reasoning traces.  
+   Machine Truth 详情包含策略意图、交易条件、风控参数以及多代理推理痕迹。
+   
+   ![Decision Stage / 决策阶段](cli_picture/Decision%20Stage.png)
+   *Figure 2 / 图2: Machine Truth details in `decision.dry-run`.*
 
-- **Recovery and observability are built in.** Shadow monitoring, reconciliation, MEV protection assumptions, and `emergencyForceClose` are treated as core safety layers.  
-  **恢复能力与可观测性内建。** Shadow Monitor、对账、MEV 防护假设以及 `emergencyForceClose` 被视为核心安全层。
+3. **Approval List (`approval.list`) / 审批列表（`approval.list`）**  
+   The pending-approval intent list is queryable, confirming the flow has entered the approval gate.  
+   可查询待审批意图列表，证明流程已进入审批关口。
+   
+   ![Approval List / 审批列表](cli_picture/Approval%20List.png)
+   *Figure 3 / 图3: Pending intents shown in `approval.list`.*
+
+4. **Approval Detail (`approval.show`) / 审批详情（`approval.show`）**  
+   Approval Battle Card displays target asset, position size, stop-loss/take-profit, TTL, and approval conclusion.  
+   Approval Battle Card 展示标的、仓位、止盈止损、TTL 与审批结论。
+   
+   ![Approval Detail / 审批详情](cli_picture/Approval%20Detail.png)
+   *Figure 4 / 图4: Approval Battle Card in `approval.show`.*
+
+5. **Execution Detail (`execution.show`) / 执行详情（`execution.show`）**  
+   Execution output records the intent state transition from `PendingEntry` to `ActivePosition`, plus callback records.  
+   执行输出记录意图状态从 `PendingEntry` 进入 `ActivePosition`，并保留回调记录。
+   
+   ![Execution Detail / 执行详情](cli_picture/Execution%20Detail.png)
+   *Figure 5 / 图5: State transition and callbacks in `execution.show`.*
+
+6. **Export Output (`export.memo`) / 导出结果（`export.memo`）**  
+   The system generates an Investment Memo with boundary statements, traceable metadata, and final conclusion text.  
+   系统自动生成 Investment Memo，包含边界声明、可追溯元数据与结论文本。
+   
+   ![Export Output / 导出结果](cli_picture/Export%20Output.png)
+   *Figure 6 / 图6: Generated memo in `export.memo`.*
+
+## Why This Prototype Matters / 这个原型为什么重要
+
+Most AI trading demos stop at analysis, chat, or loosely structured recommendations. This prototype is interesting because it tries to push one step further: from research output to bounded execution design.
+
+大多数 AI trading demo 停留在分析、对话或较为松散的建议层。这个 prototype 更有意义的地方在于，它试图往前再走一步：从研究输出推进到“受约束的执行设计”。
+
+Instead of treating language-model output as execution truth, the system insists on typed objects, validation layers, explicit approval surfaces, precompiled execution plans, and runtime monitoring. That makes the prototype useful not just as a demo, but as a concrete systems-thinking artifact.
+
+它并不把语言模型输出直接当作执行真相，而是坚持通过强类型对象、校验层、显式审批界面、预编译执行计划以及运行时监控来完成收束。这让这个 prototype 不只是演示品，也是一份可以讨论和迭代的系统设计实体。
+
+## Core Prototype Features / 原型核心特性
+
+- **CLI-first operator workflow**  
+  **CLI 优先的操作者工作流**  
+  The system is organized around explicit command surfaces instead of hidden background automation.
+  
+  系统围绕明确的命令入口组织，而不是完全依赖不可见的后台自动化。
+
+- **Multi-agent reasoning with typed outputs**  
+  **多 Agent 推理 + 强类型输出**  
+  AI reasoning is expected to land in typed domain objects such as `StrategyIntent`, `TradeIntent`, and related artifacts.
+  
+  AI 推理结果预期会落到 `StrategyIntent`、`TradeIntent` 等强类型领域对象中。
+
+- **Validation and approval boundaries**  
+  **校验与审批边界**  
+  Strategy rules, approval surfaces, and pre-registration checks are treated as part of the primary flow.
+  
+  策略规则、审批界面和注册前检查被视为主流程的一部分。
+
+- **Execution compilation before trigger time**  
+  **在触发前完成执行编译**  
+  Trigger-time execution is meant to follow constrained, precompiled logic rather than new ad hoc model outputs.
+  
+  触发时执行应遵循受约束的预编译逻辑，而不是新的临时模型输出。
+
+- **Reactive runtime and monitoring path**  
+  **Reactive 运行时与监控链路**  
+  The architecture includes Reactive-style trigger handling, monitoring, and reconciliation concepts from the start.
+  
+  这套架构从一开始就纳入了 Reactive 风格的触发处理、监控与对账思路。
+
+## What Makes This Prototype Different / 这个 Prototype 的差异点
+
+- It treats AI as a bounded reasoning layer, not as an all-powerful runtime trader.  
+  它把 AI 视为受边界约束的推理层，而不是全能的运行时交易者。
+
+- It separates research, execution truth, audit artifacts, and investment memos into different outputs.  
+  它把研究、执行真相、审计产物和投资 memo 拆成不同输出层。
+
+- It pushes critical execution logic into typed schemas, validators, compilers, and runtime constraints.  
+  它把关键执行逻辑前移到强类型 schema、validator、compiler 与运行时约束中。
+
+- It includes monitoring and fallback thinking as part of the core prototype rather than an afterthought.  
+  它把监控与兜底机制当作核心 prototype 的一部分，而不是后补思考。
 
 ## Inspirations / 灵感来源
 
-This project draws inspiration from [CryptoAgents](https://github.com/sserrano44/CryptoAgents), [TradingAgents](https://github.com/TauricResearch/TradingAgents), and [reactive-smart-contract-demos](https://github.com/Reactive-Network/reactive-smart-contract-demos). It borrows the strengths of multi-agent market reasoning, crypto-native operator workflows, and Reactive execution patterns, then narrows them behind stronger execution boundaries and safety controls.
+This prototype is informed by [CryptoAgents](https://github.com/sserrano44/CryptoAgents), [TradingAgents](https://github.com/TauricResearch/TradingAgents), and [reactive-smart-contract-demos](https://github.com/Reactive-Network/reactive-smart-contract-demos). It combines multi-agent market reasoning, crypto-native workflow design, and Reactive execution patterns into a more execution-aware prototype.
 
-本项目从 [CryptoAgents](https://github.com/sserrano44/CryptoAgents)、[TradingAgents](https://github.com/TauricResearch/TradingAgents) 和 [reactive-smart-contract-demos](https://github.com/Reactive-Network/reactive-smart-contract-demos) 中获得灵感。它吸收了多 Agent 市场推理、crypto 原生操作者工作流以及 Reactive 执行模式的优势，并进一步将它们收束到更强的执行边界与安全控制之下。
+这个 prototype 受到 [CryptoAgents](https://github.com/sserrano44/CryptoAgents)、[TradingAgents](https://github.com/TauricResearch/TradingAgents) 和 [reactive-smart-contract-demos](https://github.com/Reactive-Network/reactive-smart-contract-demos) 的启发。它把多 Agent 市场推理、crypto 原生工作流设计与 Reactive 执行模式组合到一个更强调执行边界的原型里。
 
 ## Repository Layout / 仓库结构
 
 ```text
-backend/         Core runtime, CLI, decision, validation, execution, monitoring
-docs/            Knowledge base, contracts, prompts, delivery documents
-scripts/         Utility scripts and task-brief helpers
-scaffold/        Reusable AGENTS and layout scaffolding
-GitHubREADME/    GitHub-facing bilingual documentation
+backend/         CLI, decision, validation, execution, monitoring, adapters
+docs/            Knowledge base, contracts, prompts, plans, testing notes
+scripts/         Project utilities and helper scripts
+scaffold/        Reusable templates and AGENTS scaffolding
+GitHubREADME/    GitHub-facing bilingual README variants
 ```
 
-Key repository conventions:
-
-- Start from `docs/knowledge/01_core/01_system_invariants.md` and `docs/knowledge/01_core/02_domain_models.md`
-- Read the matching module contract before changing a module
-- Treat module prompts as implementation constraints, not generic suggestions
-
-关键仓库约定：
-
-- 从 `docs/knowledge/01_core/01_system_invariants.md` 与 `docs/knowledge/01_core/02_domain_models.md` 开始
-- 修改模块前，先读对应的 module contract
-- 将模块 prompt 视为实现约束，而不是泛化建议
-
-## Current Status / 当前阶段
-
-- Architecture-first, blueprint-driven repository
-- Core knowledge base and implementation contracts are already defined
-- Python package wiring and CLI surfaces are partially implemented
-- Reactive integration, execution compiler, and safety runtime are still being built out
-- Not production-ready and not suitable for live capital without substantial further work
-
-- 这是一个以架构优先、蓝图驱动的仓库
-- 核心 knowledge base 与 implementation contract 已经定义
-- Python 包装配与 CLI 表面能力已部分实现
-- Reactive 集成、execution compiler 与安全运行时仍在建设中
-- 当前并不具备生产可用性，也不适合未经大量补强后直接接入真实资金
-
-## Technical Stack / 技术栈
-
-- Python 3.10+
-- Pydantic v2 for typed domain objects
-- Typer + Rich for CLI interaction
-- web3.py for onchain interaction
-- SQLModel + SQLite as the default Phase 1 storage path
-- APScheduler for background scheduling
-- Foundry for contract development and testing
-
-- Python 3.10+
-- 使用 Pydantic v2 定义强类型领域对象
-- 使用 Typer + Rich 构建 CLI 交互
-- 使用 web3.py 进行链上交互
-- Phase 1 默认采用 SQLModel + SQLite
-- 使用 APScheduler 做后台调度
-- 使用 Foundry 进行合约开发与测试
-
-## Getting Started / 快速开始
-
-The repository currently exposes a Python package with a CLI entrypoint. A minimal local setup looks like this:
-
-当前仓库已经暴露出 Python package 与 CLI 入口。一个最小本地启动流程如下：
+## Quick Start / 快速开始
 
 ```powershell
 python -m venv .venv
@@ -152,34 +175,49 @@ python -m pip install -e .
 agent-cli --help
 ```
 
-If you want to extend a module, follow this reading order before writing code:
+If you want to work on a specific module, the expected reading order is:
 
-如果你想扩展某个模块，请在动手前按下面顺序阅读：
+如果你要进入某个具体模块，建议按下面顺序阅读：
 
 1. `docs/knowledge/01_core/01_system_invariants.md`
 2. `docs/knowledge/01_core/02_domain_models.md`
 3. `docs/contracts/<module>.contract.md`
-4. The matching module file under `docs/knowledge/`
+4. The matching module knowledge file
 5. `docs/prompts/<module>.prompt.md`
+
+## Prototype Status / 原型状态
+
+- Runnable and inspectable as a research-grade prototype
+这是一个可运行、可检查的 research-grade prototype
+  
+- Structured as a full end-to-end system, with some modules more mature than others
+它已经具备完整端到端系统结构，但各模块成熟度并不完全一致
+  
+- Suitable for architecture exploration, workflow design, and iterative implementation
+适合做架构探索、工作流设计与迭代实现
+  
+- Still experimental and not ready for unattended production capital deployment
+仍然属于实验性系统，不适合无人值守地直接部署真实资金
 
 ## Roadmap / 路线图
 
-1. Finish typed `DecisionContext`, `StrategyIntent`, and `TradeIntent` flows
-2. Connect multi-agent reasoning to stable structured outputs
-3. Implement strategy boundary validation and pre-registration checks
-4. Compile execution plans for Reactive-triggered entry and exit paths
-5. Add shadow monitoring, reconciliation, and richer audit/export paths
-6. Expand optional risk modules and cross-chain interface adapters
-
-1. 完成 `DecisionContext`、`StrategyIntent` 与 `TradeIntent` 的强类型主链路
-2. 将多 Agent 推理稳定接入结构化输出
-3. 实现 strategy boundary 校验与注册前检查
-4. 为 Reactive 触发的入场与出场路径编译 execution plan
-5. 补齐 shadow monitor、对账与更完整的审计导出链路
-6. 扩展可选风险模块与跨链接口适配层
+1. Stabilize typed decision outputs and validation contracts
+   稳定结构化决策输出与校验契约
+   
+2. Tighten CLI approval and operator review surfaces
+   强化 CLI 审批与操作者复核界面
+   
+3. Complete execution compiler and Reactive-trigger integration
+   完成 execution compiler 与 Reactive trigger 集成
+   
+4. Expand monitoring, reconciliation, and export paths
+   扩展监控、对账与导出链路
+   
+5. Add richer risk controls and optional cross-chain adapters
+   增加更丰富的风险控制与可选跨链适配能力
 
 ## Disclaimer / 风险声明
 
-This repository is for research, system design, and implementation planning. It is not financial advice, not a production custody system, and not a guarantee of safe autonomous trading. Do not connect it to real capital without substantial review, testing, contract validation, and operational controls.
+This is a runnable prototype for research and system design. It is not investment advice, not a production custody platform, and not a guarantee of safe autonomous trading. Any real-capital use would require substantial additional testing, contract review, operational controls, and security hardening.
 
-本仓库用于研究、系统设计与实现规划。它不是投资建议，不是生产级托管系统，也不代表“安全自动交易”已经被证明成立。在经过充分评审、测试、合约验证与运维控制之前，请不要直接接入真实资金。
+这是一个面向研究与系统设计的可运行 prototype。它不是投资建议，不是生产级托管平台，也不代表“安全自动交易”已经被验证成立。任何真实资金场景都需要额外的大量测试、合约审查、运维控制与安全加固。
