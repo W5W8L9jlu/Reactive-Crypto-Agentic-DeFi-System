@@ -41,6 +41,54 @@
 - 在运行时重新编译 execution plan
 - 让 AI 直接生成最终 calldata
 - 吞掉核心业务异常
+- 使用静默 fallback 掩盖缺失数据、错误配置或业务异常
+- 用疯狂嵌套的 if/else 混淆核心业务逻辑
+- 滥用 try/except，把测试适配、错误吞噬和业务流程混在一起
+
+## Phase2 补充规则
+
+当任务属于 Phase2 / Core Execution Loop 时，优先遵守：
+
+1. `docs/knowledge/00_meta/03_phase2_wave_parallelization_map.md`
+2. `docs/knowledge/08_delivery/04_phase2_prd_alignment.md`
+3. `docs/knowledge/08_delivery/05_phase2_wave_plan.md`
+4. `docs/contracts/phase2_interface_freeze.contract.md`
+5. `docs/contracts/phase2_core_execution_loop.contract.md`
+6. `docs/contracts/phase2_disabled_features.contract.md`
+7. 当前 Wave Gate：`docs/acceptance/waves/P2_W*.wave_gate.md`
+8. 对应 Phase2 prompt：`docs/prompts/phase2_*.prompt.md`
+9. 对应目录级规则：`scaffold/backend/*/AGENTS.md`
+
+Phase2 固定边界：
+- single-chain only
+- long-only only
+- Uniswap V2-compatible only
+- register-time `tokenIn` custody
+- LocalExecutor first, ReactiveExecutorAdapter v1 later
+- JSON and chain events are execution truth
+
+Phase2 不做：
+- complete Approval Flow queue
+- Shadow Monitor daemon
+- Aave Protection
+- Uniswap V3 execution
+- Hyperlane / cross-chain execution
+- webhook alerts
+- Postgres / Redis default path
+
+Phase2 执行顺序：
+- W0: Interface Freeze
+- W1: Offline Core Loop
+- W2: Local Chain Mock Loop
+- W3: Fork/Testnet E2E Loop
+- W4: Reactive + Hardening + Export Closure
+
+Phase2 任务不得绕过当前 Wave Gate。
 
 ## 补充
-- if something you want to find is not defined in current knowledge files,read prd_final_v10.md（"D:\reactive-crypto-agentic-DeFi-system\prd_final_v10.md"）
+- Phase2 任务若 knowledge/contract 未定义，按以下根目录文档顺序补充查阅：
+  1. `prd_final_v11_phase2_core_execution_loop.md`（Phase2 总边界）
+  2. `prd_phase2_lite_agile_v1.md`（Phase2 敏捷开发输入）
+  3. `phase2_wave_development_plan_v1.md`（W0-W4 Wave 执行计划）
+  4. `phase2_vibe_coding_development_paradigm_v1.md`（Phase2 文档生产范式）
+- `prd_final_v10.md` 仅作为历史/Phase1 参考；当它与 Phase2 v11 文档冲突时，以 `prd_final_v11_phase2_core_execution_loop.md` 为准。

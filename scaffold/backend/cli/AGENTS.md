@@ -9,3 +9,20 @@
 规则：
 - 默认显示 battle card，不直接显示 raw JSON
 - CLI 只做路由/展示/操作入口
+
+## Phase2 Guardrails - CLI
+
+CLI exposes Phase2 Core Execution Loop only.
+
+Must:
+- Support `decision dry-run` / `decision run`.
+- Support `execution register` / `execution show` / `execution logs`.
+- Support `export json` / `export markdown` / `export memo`.
+- Render disabled feature errors clearly.
+- Keep approval commands stubbed or disabled in Phase2.
+
+Must not:
+- Implement full approval flow.
+- Implement monitor daemon commands as completed features.
+- Trigger manual force-close unless contract state and Phase2 gate allow it.
+- Treat Audit Markdown as execution truth.

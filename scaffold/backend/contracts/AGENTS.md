@@ -10,3 +10,22 @@
 - 状态机只能 PendingEntry -> ActivePosition -> Closed
 - Closed 不能再次触发
 - force-close 先写 Closed 再卖出
+
+## Phase2 Guardrails - Contracts
+
+Phase2 contracts implement a single-chain, long-only, Uniswap V2-compatible investment state machine.
+
+Must:
+- Use register-time `tokenIn` custody.
+- Implement `PendingEntry -> ActivePosition -> Closed`.
+- Emit stable events for EventSyncer.
+- Use an authorized executor for `executeReactiveTrigger`.
+- Use price oracle adapter semantics from `docs/contracts/phase2_price_oracle_adapter.contract.md`.
+- Keep `emergencyForceClose` interface reserved.
+
+Must not:
+- Implement Uniswap V3.
+- Implement cross-chain messaging.
+- Implement Aave protection.
+- Allow `Closed` intent to execute again.
+- Let `PendingEntry` TTL or `maxEntryGasPriceWei` block `ActivePosition` exits.
