@@ -1,0 +1,28 @@
+{
+  "workflow": "Module Execution",
+  "status": "ReadyForSpawn",
+  "module_id": "execution_compiler",
+  "title": "Execution Compiler",
+  "phase": "Registration and Execution",
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/03_strategy_validation/03_pre_registration_check.md",
+    "docs/knowledge/05_reactive_contracts/02_investment_state_machine.md",
+    "docs/knowledge/04_execution/01_execution_compiler.md",
+    "docs/contracts/execution_compiler.contract.md",
+    "docs/prompts/execution_compiler.prompt.md"
+  ],
+  "only_edit": [
+    "backend/execution/compiler/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/execution/compiler/test_execution_compiler.py -q"
+  ],
+  "files": {
+    "draft": "draft.json",
+    "review": "review.md",
+    "approved": "approved.json",
+    "spawn": "spawn.json"
+  }
+}

@@ -1,0 +1,25 @@
+[   10527ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2 @ https://www.gstatic.com/recaptcha/releases/gTpTIWhbKpxADzTzkcabhXN4/recaptcha__zh_cn.js:416
+[   14269ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://faucet.circle.com/_next/static/chunks/65851-47f87224c26fa861.js:0
+[   14317ms] [WARNING] Datadog Browser SDK: SDK is loaded more than once. This is unsupported and might have unexpected behavior. @ https://www.datadoghq-browser-agent.com/us1/v5/datadog-rum.js:0
+[   71572ms] [ERROR] NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at un (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:93540)
+    at un (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:93651)
+    at ub (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:103538)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98451)
+    at ug (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98321)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:100617)
+    at ug (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98321)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:100617)
+    at ug (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98321)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98443) @ https://faucet.circle.com/_next/static/chunks/55777-77bd43798c6affdf.js:0
+[  115982ms] [ERROR] NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.
+    at un (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:93540)
+    at un (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:93651)
+    at ub (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:103538)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98451)
+    at ug (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98321)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:100617)
+    at ug (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98321)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:100617)
+    at ug (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98321)
+    at uv (https://faucet.circle.com/_next/static/chunks/87c73c54-96971e18fd7fbc8f.js:1:98443) @ https://faucet.circle.com/_next/static/chunks/55777-77bd43798c6affdf.js:0

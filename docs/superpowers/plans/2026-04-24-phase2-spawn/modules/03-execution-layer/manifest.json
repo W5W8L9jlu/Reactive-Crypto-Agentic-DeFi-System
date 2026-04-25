@@ -1,0 +1,30 @@
+{
+  "workflow": "Module Execution",
+  "status": "ReadyForSpawn",
+  "module_id": "execution_layer",
+  "title": "Execution Layer",
+  "phase": "Registration and Execution",
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/05_reactive_contracts/01_reactive_runtime.md",
+    "docs/knowledge/07_data/02_source_of_truth_rules.md",
+    "docs/knowledge/04_execution/02_execution_layer.md",
+    "docs/contracts/execution_layer.contract.md",
+    "docs/prompts/execution_layer.prompt.md"
+  ],
+  "only_edit": [
+    "backend/execution/runtime/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/execution/runtime/test_contract_gateway.py -q",
+    "python -m pytest backend/execution/runtime/test_execution_layer.py -q",
+    "python -m pytest backend/execution/runtime/test_web3_contract_gateway_integration.py -q"
+  ],
+  "files": {
+    "draft": "draft.json",
+    "review": "review.md",
+    "approved": "approved.json",
+    "spawn": "spawn.json"
+  }
+}

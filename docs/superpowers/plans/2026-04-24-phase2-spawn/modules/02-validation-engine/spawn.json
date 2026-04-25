@@ -1,0 +1,92 @@
+{
+  "module_id": "validation_engine",
+  "title": "Validation Engine",
+  "phase": "Decision Boundary",
+  "workflow_roles": {
+    "developer": "Backend Architect",
+    "tester": "API Tester",
+    "analyzer": "Test Results Analyzer",
+    "reviewer": "Code Reviewer",
+    "git_master": "Git Workflow Master",
+    "gate": "Product Manager",
+    "senior_developer": "Senior Developer"
+  },
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/03_strategy_validation/01_strategy_boundary.md",
+    "docs/knowledge/03_strategy_validation/02_validation_engine.md",
+    "docs/contracts/validation_engine.contract.md",
+    "docs/prompts/validation_engine.prompt.md"
+  ],
+  "only_edit": [
+    "backend/validation/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/validation/test_phase1_real_rpc_gate.py -q",
+    "python -m pytest backend/validation/test_pre_registration_check.py -q",
+    "python -m pytest backend/validation/test_strategy_risk_boundaries.py -q",
+    "python -m pytest backend/validation/test_validation_engine.py -q"
+  ],
+  "status": "Approved",
+  "module_package": {
+    "module_id": "validation_engine",
+    "title": "Validation Engine",
+    "phase": "Decision Boundary",
+    "workflow_roles": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager",
+      "senior_developer": "Senior Developer"
+    },
+    "read_first": [
+      "docs/knowledge/01_core/01_system_invariants.md",
+      "docs/knowledge/01_core/02_domain_models.md",
+      "docs/knowledge/03_strategy_validation/01_strategy_boundary.md",
+      "docs/knowledge/03_strategy_validation/02_validation_engine.md",
+      "docs/contracts/validation_engine.contract.md",
+      "docs/prompts/validation_engine.prompt.md"
+    ],
+    "only_edit": [
+      "backend/validation/"
+    ],
+    "suggested_checks": [
+      "python -m pytest backend/validation/test_phase1_real_rpc_gate.py -q",
+      "python -m pytest backend/validation/test_pre_registration_check.py -q",
+      "python -m pytest backend/validation/test_strategy_risk_boundaries.py -q",
+      "python -m pytest backend/validation/test_validation_engine.py -q"
+    ]
+  },
+  "task_card": {
+    "module_id": "validation_engine",
+    "goal": "Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult",
+    "acceptance": [
+      "所有核心对象先解析为强类型对象",
+      "抛出清晰 ValidationError 或领域异常",
+      "输出 ValidationResult",
+      "字段范围校验",
+      "跨字段 model_validator 校验",
+      "非法对象拒绝测试"
+    ],
+    "non_goals": [
+      "RPC 查询",
+      "calldata 编译",
+      "审批展示"
+    ],
+    "risks": [
+      "必须基于 Pydantic v2",
+      "禁止散落 if/else schema 校验",
+      "不做链上状态确认",
+      "不得向其他模块偷偷引入新行为。",
+      "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+      "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+    ],
+    "markdown": "# Draft Task Card\n\n## Header\n\n- `模块：` Validation Engine (`validation_engine`)\n- `负责人 agent：` Backend Architect\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult\n\n## 2. 验收标准\n\n- [ ] 所有核心对象先解析为强类型对象\n- [ ] 抛出清晰 ValidationError 或领域异常\n- [ ] 输出 ValidationResult\n- [ ] 字段范围校验\n- [ ] 跨字段 model_validator 校验\n- [ ] 非法对象拒绝测试\n\n## 3. 非目标\n\n- RPC 查询\n- calldata 编译\n- 审批展示\n\n## 4. 风险\n\n- 必须基于 Pydantic v2\n- 禁止散落 if/else schema 校验\n- 不做链上状态确认\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/03_strategy_validation/02_validation_engine.md`\n- `docs/contracts/validation_engine.contract.md`\n- `docs/prompts/validation_engine.prompt.md`",
+    "status": "Approved"
+  },
+  "prompt_body": "You are a Codex subagent working on module `Validation Engine` (`validation_engine`).\nPhase: `Decision Boundary`.\n\nUse this task card as the source of truth:\n```markdown\n# Draft Task Card\n\n## Header\n\n- `模块：` Validation Engine (`validation_engine`)\n- `负责人 agent：` Backend Architect\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult\n\n## 2. 验收标准\n\n- [ ] 所有核心对象先解析为强类型对象\n- [ ] 抛出清晰 ValidationError 或领域异常\n- [ ] 输出 ValidationResult\n- [ ] 字段范围校验\n- [ ] 跨字段 model_validator 校验\n- [ ] 非法对象拒绝测试\n\n## 3. 非目标\n\n- RPC 查询\n- calldata 编译\n- 审批展示\n\n## 4. 风险\n\n- 必须基于 Pydantic v2\n- 禁止散落 if/else schema 校验\n- 不做链上状态确认\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/03_strategy_validation/02_validation_engine.md`\n- `docs/contracts/validation_engine.contract.md`\n- `docs/prompts/validation_engine.prompt.md`\n```\n\nModule package:\n{\n  \"module_id\": \"validation_engine\",\n  \"title\": \"Validation Engine\",\n  \"phase\": \"Decision Boundary\",\n  \"workflow_roles\": {\n    \"developer\": \"Backend Architect\",\n    \"tester\": \"API Tester\",\n    \"analyzer\": \"Test Results Analyzer\",\n    \"reviewer\": \"Code Reviewer\",\n    \"git_master\": \"Git Workflow Master\",\n    \"gate\": \"Product Manager\",\n    \"senior_developer\": \"Senior Developer\"\n  },\n  \"read_first\": [\n    \"docs/knowledge/01_core/01_system_invariants.md\",\n    \"docs/knowledge/01_core/02_domain_models.md\",\n    \"docs/knowledge/03_strategy_validation/01_strategy_boundary.md\",\n    \"docs/knowledge/03_strategy_validation/02_validation_engine.md\",\n    \"docs/contracts/validation_engine.contract.md\",\n    \"docs/prompts/validation_engine.prompt.md\"\n  ],\n  \"only_edit\": [\n    \"backend/validation/\"\n  ],\n  \"suggested_checks\": [\n    \"python -m pytest backend/validation/test_phase1_real_rpc_gate.py -q\",\n    \"python -m pytest backend/validation/test_pre_registration_check.py -q\",\n    \"python -m pytest backend/validation/test_strategy_risk_boundaries.py -q\",\n    \"python -m pytest backend/validation/test_validation_engine.py -q\"\n  ]\n}\n\nInstructions:\n- Complete the acceptance criteria.\n- Respect the non-goals and risks.\n- If the implementation gets blocked on cross-file engineering detail, escalate to Senior Developer.\n- After implementation and tests, route the diff through the Code Reviewer before final handoff.\n- Before branch or PR closure, follow the Git Workflow Master for Git hygiene.\n- Preserve POSIX-style paths in any output or references.\n- If the task is under-specified, stop and report the ambiguity instead of inventing behavior.",
+  "prompt": "You are a Codex subagent working on module `Validation Engine` (`validation_engine`).\nPhase: `Decision Boundary`.\n\nUse this task card as the source of truth:\n```markdown\n# Draft Task Card\n\n## Header\n\n- `模块：` Validation Engine (`validation_engine`)\n- `负责人 agent：` Backend Architect\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult\n\n## 2. 验收标准\n\n- [ ] 所有核心对象先解析为强类型对象\n- [ ] 抛出清晰 ValidationError 或领域异常\n- [ ] 输出 ValidationResult\n- [ ] 字段范围校验\n- [ ] 跨字段 model_validator 校验\n- [ ] 非法对象拒绝测试\n\n## 3. 非目标\n\n- RPC 查询\n- calldata 编译\n- 审批展示\n\n## 4. 风险\n\n- 必须基于 Pydantic v2\n- 禁止散落 if/else schema 校验\n- 不做链上状态确认\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/03_strategy_validation/02_validation_engine.md`\n- `docs/contracts/validation_engine.contract.md`\n- `docs/prompts/validation_engine.prompt.md`\n```\n\nModule package:\n{\n  \"module_id\": \"validation_engine\",\n  \"title\": \"Validation Engine\",\n  \"phase\": \"Decision Boundary\",\n  \"workflow_roles\": {\n    \"developer\": \"Backend Architect\",\n    \"tester\": \"API Tester\",\n    \"analyzer\": \"Test Results Analyzer\",\n    \"reviewer\": \"Code Reviewer\",\n    \"git_master\": \"Git Workflow Master\",\n    \"gate\": \"Product Manager\",\n    \"senior_developer\": \"Senior Developer\"\n  },\n  \"read_first\": [\n    \"docs/knowledge/01_core/01_system_invariants.md\",\n    \"docs/knowledge/01_core/02_domain_models.md\",\n    \"docs/knowledge/03_strategy_validation/01_strategy_boundary.md\",\n    \"docs/knowledge/03_strategy_validation/02_validation_engine.md\",\n    \"docs/contracts/validation_engine.contract.md\",\n    \"docs/prompts/validation_engine.prompt.md\"\n  ],\n  \"only_edit\": [\n    \"backend/validation/\"\n  ],\n  \"suggested_checks\": [\n    \"python -m pytest backend/validation/test_phase1_real_rpc_gate.py -q\",\n    \"python -m pytest backend/validation/test_pre_registration_check.py -q\",\n    \"python -m pytest backend/validation/test_strategy_risk_boundaries.py -q\",\n    \"python -m pytest backend/validation/test_validation_engine.py -q\"\n  ]\n}\n\nInstructions:\n- Complete the acceptance criteria.\n- Respect the non-goals and risks.\n- If the implementation gets blocked on cross-file engineering detail, escalate to Senior Developer.\n- After implementation and tests, route the diff through the Code Reviewer before final handoff.\n- Before branch or PR closure, follow the Git Workflow Master for Git hygiene.\n- Preserve POSIX-style paths in any output or references.\n- If the task is under-specified, stop and report the ambiguity instead of inventing behavior."
+}

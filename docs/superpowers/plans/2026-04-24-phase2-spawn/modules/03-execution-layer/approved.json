@@ -1,0 +1,109 @@
+{
+  "module_id": "execution_layer",
+  "title": "Execution Layer",
+  "phase": "Registration and Execution",
+  "workflow_roles": {
+    "developer": "Solidity Smart Contract Engineer",
+    "tester": "API Tester",
+    "analyzer": "Test Results Analyzer",
+    "reviewer": "Code Reviewer",
+    "git_master": "Git Workflow Master",
+    "gate": "Blockchain Security Auditor",
+    "senior_developer": "Senior Developer"
+  },
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/05_reactive_contracts/01_reactive_runtime.md",
+    "docs/knowledge/07_data/02_source_of_truth_rules.md",
+    "docs/knowledge/04_execution/02_execution_layer.md",
+    "docs/contracts/execution_layer.contract.md",
+    "docs/prompts/execution_layer.prompt.md"
+  ],
+  "only_edit": [
+    "backend/execution/runtime/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/execution/runtime/test_contract_gateway.py -q",
+    "python -m pytest backend/execution/runtime/test_execution_layer.py -q",
+    "python -m pytest backend/execution/runtime/test_web3_contract_gateway_integration.py -q"
+  ],
+  "status": "Approved",
+  "summary": {
+    "module_id": "execution_layer",
+    "title": "Execution Layer",
+    "goal": "Implement module scope: 能消费 runtime trigger 并记录执行回执; ExecutionRecord 与链上回执一致",
+    "acceptance_highlights": [
+      "能消费 runtime trigger 并记录执行回执",
+      "ExecutionRecord 与链上回执一致",
+      "执行成功回执测试"
+    ],
+    "non_goals_highlights": [
+      "自由决策",
+      "重新编译",
+      "替代状态机"
+    ],
+    "risks_highlights": [
+      "不在校验通过后立即 swap",
+      "只在 Reactive 触发后执行",
+      "只负责链上调用和回执记录"
+    ]
+  },
+  "draft": {
+    "module_id": "execution_layer",
+    "title": "Execution Layer",
+    "goal": "Implement module scope: 能消费 runtime trigger 并记录执行回执; ExecutionRecord 与链上回执一致",
+    "acceptance": [
+      "能消费 runtime trigger 并记录执行回执",
+      "ExecutionRecord 与链上回执一致",
+      "执行成功回执测试",
+      "链上失败回执测试",
+      "record/export 一致性测试"
+    ],
+    "non_goals": [
+      "自由决策",
+      "重新编译",
+      "替代状态机"
+    ],
+    "risks": [
+      "不在校验通过后立即 swap",
+      "只在 Reactive 触发后执行",
+      "只负责链上调用和回执记录",
+      "不得向其他模块偷偷引入新行为。",
+      "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+      "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+    ],
+    "instructions": [],
+    "sources": {
+      "scope": [
+        "能消费 runtime trigger 并记录执行回执",
+        "ExecutionRecord 与链上回执一致"
+      ],
+      "definition_of_done": [
+        "能消费 runtime trigger 并记录执行回执",
+        "ExecutionRecord 与链上回执一致"
+      ],
+      "minimum_verification": [
+        "执行成功回执测试",
+        "链上失败回执测试",
+        "record/export 一致性测试"
+      ],
+      "non_goals": [
+        "自由决策",
+        "重新编译",
+        "替代状态机"
+      ],
+      "hard_invariants": [
+        "不在校验通过后立即 swap",
+        "只在 Reactive 触发后执行",
+        "只负责链上调用和回执记录"
+      ],
+      "handoff_contract": [
+        "不得向其他模块偷偷引入新行为。",
+        "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+        "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+      ]
+    }
+  },
+  "markdown": "# Draft Task Card\n\n## Header\n\n- `模块：` Execution Layer (`execution_layer`)\n- `负责人 agent：` Solidity Smart Contract Engineer\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 能消费 runtime trigger 并记录执行回执; ExecutionRecord 与链上回执一致\n\n## 2. 验收标准\n\n- [ ] 能消费 runtime trigger 并记录执行回执\n- [ ] ExecutionRecord 与链上回执一致\n- [ ] 执行成功回执测试\n- [ ] 链上失败回执测试\n- [ ] record/export 一致性测试\n\n## 3. 非目标\n\n- 自由决策\n- 重新编译\n- 替代状态机\n\n## 4. 风险\n\n- 不在校验通过后立即 swap\n- 只在 Reactive 触发后执行\n- 只负责链上调用和回执记录\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/04_execution/02_execution_layer.md`\n- `docs/contracts/execution_layer.contract.md`\n- `docs/prompts/execution_layer.prompt.md`"
+}

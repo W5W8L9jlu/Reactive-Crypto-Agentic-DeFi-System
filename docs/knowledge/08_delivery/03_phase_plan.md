@@ -25,6 +25,8 @@
 - 链上 Callback 运行时检查
 - Reactive stop/tp
 - Audit Markdown / Investment Memo 导出
+- 跨链接口接入（Hyperlane / gasless-cross-chain-atomic-swap）
+- 多链消息与跨链执行最小闭环
 
 ### Phase 3（2–3 周）
 - approval flow
@@ -55,6 +57,36 @@
   - Telegram / Discord / 钉钉 Webhook
   - Bitquery / Moralis 非主链路接入
   - Postgres / Redis 扩展部署
+
+### 14.3 Phase 1 Gate：真实链数据通路验收
+Phase 1 不要求真上主网，但必须证明系统至少从真实链环境读到过一次数据，并用它完成主链路判断。
+
+验收标准：
+- `DecisionContextBuilder` 至少接入一次真实 `RPC` 或 `fork RPC`。
+- 读取的数据必须包含最小集：`block_number`、`block_timestamp`、`reserve`、`balance`、`allowance`、`gas price`。
+- `PreRegistrationCheck` 必须基于上述真实读数完成一次允许 / 拒绝判断。
+- `The Graph` 只能作为辅助数据源，不能替代 `RPC` 真相。
+- 端到端结果必须可追溯到真实链读数，而不是仅依赖 `fake adapter` 或 `in-memory gateway`。
+
+判定规则：
+- `PASS`：至少一次 `fork` / `testnet` / 真实 `RPC` 跑通 Phase 1 主链路。
+- `HOLD`：只有 mock、fake adapter、内存网关，没有真实链读数。
+- `FAIL`：连 `RPC` 读链都没有，或者 `PreRegistrationCheck` 不是基于真实链数据。
+
+### 14.4 Phase 2 Gate：条件执行与跨链扩展验收
+Phase 2 必须在保持 Phase 1 核心不变量的前提下，证明“注册编译 -> 条件触发 -> 回执导出”与“跨链扩展接口”均可验证。
+
+验收标准：
+- `ExecutionCompiler` 在注册时产出可执行约束参数，触发时不重编译。
+- `Reactive Runtime + Execution Layer` 可完成入场触发与 stop/tp 触发，并保留 callback 运行时检查。
+- `ValidationEngine + PreRegistrationCheck` 可给出可追溯的 allow/reject 结果。
+- `ExportOutputs` 可导出三轨结果，且字段与 Machine Truth 对齐。
+- 跨链接口/多链消息路径至少存在一条最小可验证链路（mock/fork/testnet 任一）。
+
+判定规则：
+- `PASS`：Phase 2 六个核心模块门禁通过，且跨链扩展路径有证据。
+- `HOLD`：核心模块通过，但跨链接口仅占位或无验证证据。
+- `FAIL`：核心链路存在阻断，或违反核心不变量（如触发时重编译）。
 
 ## 15. 测试用例设计
 

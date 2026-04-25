@@ -1,0 +1,176 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - link "Circle Docs" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "Circle Docs" [ref=e7]
+      - link "Explore Docs" [ref=e9] [cursor=pointer]:
+        - /url: https://developers.circle.com
+        - button "Explore Docs" [ref=e10]:
+          - generic: Explore Docs
+    - generic [ref=e11]:
+      - generic [ref=e553]:
+        - generic [ref=e555]:
+          - generic [ref=e556]: Testnet Faucet
+          - generic [ref=e557]: Send testnet USDC and EURC to your wallet to experiment with fund flows in your app or smart contract for free.
+        - generic [ref=e558]:
+          - generic [ref=e559]:
+            - generic [ref=e563] [cursor=pointer]:
+              - generic [ref=e565]:
+                - img
+                - generic [ref=e566]: USDC
+              - radio [checked] [ref=e567]
+            - generic [ref=e571] [cursor=pointer]:
+              - generic [ref=e573]:
+                - img
+                - generic [ref=e574]: EURC
+              - radio [ref=e575]
+          - generic "Network" [ref=e576]:
+            - generic [ref=e577]:
+              - generic [ref=e579]: Network
+              - button "Network Base Sepolia" [ref=e778] [cursor=pointer]:
+                - generic [ref=e582]: Base Sepolia
+                - generic [ref=e583]:
+                  - img
+                - generic [ref=e584]:
+                  - img
+          - generic [ref=e585]:
+            - generic [ref=e587]: Send to
+            - textbox "Send to" [ref=e590]:
+              - /placeholder: Wallet address
+              - text: "0xAf3fDAac647cE7ED56Ba8D98bC9bF77bb768594B"
+            - generic [ref=e591]: "Limit: One request per pairing of stablecoin and test network every 2 hours"
+          - generic [ref=e592]:
+            - iframe [ref=e597]:
+              - generic [ref=f26e2]:
+                - generic [ref=f26e3]:
+                  - checkbox "进行人机身份验证" [ref=f26e7]
+                  - generic [ref=f26e11]: 进行人机身份验证
+                - generic [ref=f26e15]: reCAPTCHA
+            - paragraph [ref=e598]: We detect unusual traffic from your request. Please verify that you are not a bot and submit again.
+          - button "Send 20 USDC" [ref=e779] [cursor=pointer]:
+            - generic: Send 20 USDC
+      - generic [ref=e56]:
+        - generic [ref=e59]: Frequently Asked Questions
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - button "What is a testnet?" [ref=e62] [cursor=pointer]:
+              - generic [ref=e63]: What is a testnet?
+              - img [ref=e65]
+            - generic [ref=e67]: A testnet is an instance of a blockchain used specifically for testing. In contrast to a mainnet blockchain, which represents a production environment, testnets allow developers to test their apps and smart contracts without risking assets with real-world value. Testnet tokens are assets that can be freely obtained from testnet faucets to experiment with funds flows on testnets.
+          - generic [ref=e68]:
+            - button "How can I get native tokens on testnet like ETH and POL?" [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]: How can I get native tokens on testnet like ETH and POL?
+              - img [ref=e72]
+            - generic [ref=e74]:
+              - text: Developers can use Circle's Faucet in the Developer Console to obtain testnet ETH and POL. Testnet tokens generated from the Developer Console will be sent to wallet addresses created with Circle Wallets.
+              - link [ref=e75] [cursor=pointer]:
+                - /url: https://console.circle.com
+                - text: Get started for free
+              - text: .
+          - generic [ref=e76]:
+            - button "What's the difference between this Faucet and the Faucet in the Developer Console?" [ref=e77] [cursor=pointer]:
+              - generic [ref=e78]: What's the difference between this Faucet and the Faucet in the Developer Console?
+              - img [ref=e80]
+            - generic [ref=e82]:
+              - text: This Faucet is public and permissionless for anyone to use. There's no account required, and it can provide free access to testnet USDC and EURC on all supported blockchains. The Faucet in the Developer Console provides free access to both native tokens on testnet like ETH and POL and stablecoin tokens on testnet like USDC and EURC. It can only fund wallet addresses created with Circle Wallets.
+              - link [ref=e83] [cursor=pointer]:
+                - /url: https://console.circle.com
+                - text: Get started for free
+              - text: .
+          - generic [ref=e84]:
+            - button "Which testnets does this Faucet support?" [ref=e85] [cursor=pointer]:
+              - generic [ref=e86]: Which testnets does this Faucet support?
+              - img [ref=e88]
+            - generic [ref=e90]:
+              - text: This Faucet provides access to testnet tokens on every blockchain that supports USDC and EURC. See our docs for
+              - link [ref=e91] [cursor=pointer]:
+                - /url: https://developers.circle.com/stablecoins/docs/usdc-on-test-networks
+                - text: USDC testnet addresses
+              - text: and
+              - link [ref=e92] [cursor=pointer]:
+                - /url: https://developers.circle.com/stablecoins/docs/eurc-on-test-networks
+                - text: EURC testnet addresses
+              - text: .
+          - generic [ref=e93]:
+            - button "How much USDC can I get from this Faucet?" [ref=e94] [cursor=pointer]:
+              - generic [ref=e95]: How much USDC can I get from this Faucet?
+              - img [ref=e97]
+            - generic [ref=e99]:
+              - text: Developers can request 20 USDC on testnet every 2 hours, per address, and per blockchain. If you need more, you can submit a request on Circle's
+              - link [ref=e100] [cursor=pointer]:
+                - /url: https://discord.com/invite/buildoncircle
+                - text: Discord
+              - text: .
+          - generic [ref=e101]:
+            - button "Why am I seeing an error message of “Limit Exceeded”?" [ref=e102] [cursor=pointer]:
+              - generic [ref=e103]: Why am I seeing an error message of “Limit Exceeded”?
+              - img [ref=e105]
+            - generic [ref=e107]:
+              - text: This means that you have exceeded a limit and you will need to wait to try again. Developers can request 20 USDC on testnet every 2 hours, per address, and per blockchain. If you need more, you can submit a request on Circle's
+              - link [ref=e108] [cursor=pointer]:
+                - /url: https://discord.com/invite/buildoncircle
+                - text: Discord
+              - text: .
+          - generic [ref=e109]:
+            - button "How can I get testnet USDC if the testnet I need it on isn't listed in the network dropdown?" [ref=e110] [cursor=pointer]:
+              - generic [ref=e111]: How can I get testnet USDC if the testnet I need it on isn't listed in the network dropdown?
+              - img [ref=e113]
+            - generic [ref=e115]:
+              - text: If the chain you're trying to access testnet USDC on isn't listed, you can use CCTP to move USDC from Ethereum Sepolia to your target chain (as long as the target is supported by CCTP). Follow the
+              - link [ref=e116] [cursor=pointer]:
+                - /url: https://developers.circle.com/stablecoins/transfer-usdc-on-testnet-from-ethereum-to-avalanche
+                - text: CCTP Quickstart Guide
+              - text: in the Developer Docs and make sure to select CCTP for testnet transfers across chains.
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - link "Developer Terms" [ref=e121] [cursor=pointer]:
+          - /url: https://console.circle.com/legal/developer-terms
+        - link "Service Terms" [ref=e122] [cursor=pointer]:
+          - /url: https://console.circle.com/legal/service-terms
+        - link "Privacy Policy" [ref=e123] [cursor=pointer]:
+          - /url: https://www.circle.com/en/legal/privacy-policy
+        - link "Your Privacy Choices Your Privacy Choices" [ref=e124] [cursor=pointer]:
+          - /url: "#"
+          - text: Your Privacy Choices
+          - img "Your Privacy Choices" [ref=e125]
+      - generic [ref=e126]:
+        - link [ref=e127] [cursor=pointer]:
+          - /url: https://discord.com/invite/buildoncircle
+          - img
+        - link [ref=e128] [cursor=pointer]:
+          - /url: https://twitter.com/BuildOnCircle
+          - img
+        - link [ref=e129] [cursor=pointer]:
+          - /url: https://www.youtube.com/playlist?list=PLoJwRn8qrG24wgM802HEDGtzfIL6D9PYW
+          - img
+  - alert [ref=e130]
+  - status [ref=e131]
+  - iframe [active] [ref=e783]:
+    - dialog [ref=f28e146]:
+      - generic [ref=f28e147]:
+        - generic [ref=f28e150]:
+          - text: 请选择包含
+          - strong [ref=f28e151]: 人行横道
+          - text: 的所有图片。
+          - generic [ref=f28e152]: 在没有新图片可以点按后，请点击“验证”。
+        - table [ref=f28e155]:
+          - rowgroup [ref=f28e156]:
+            - row [ref=f28e157]:
+              - button [ref=f28e158]
+              - button [ref=f28e161]
+              - button [ref=f28e164]
+            - row [ref=f28e167]:
+              - button [ref=f28e168]
+              - button [ref=f28e171]
+              - button [ref=f28e174]
+            - row [ref=f28e177]:
+              - button [ref=f28e178]
+              - button [ref=f28e181]
+              - button [ref=f28e184]
+      - generic [ref=f28e190]:
+        - generic [ref=f28e191]:
+          - button "换一个新的验证码" [ref=f28e193] [cursor=pointer]
+          - button "改用音频验证" [ref=f28e195] [cursor=pointer]
+          - button "帮助" [ref=f28e197] [cursor=pointer]
+        - button "验证" [ref=f28e199] [cursor=pointer]

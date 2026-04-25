@@ -1,0 +1,2 @@
+[    5407ms] [WARNING] Datadog Browser SDK: SDK is loaded more than once. This is unsupported and might have unexpected behavior. @ https://www.datadoghq-browser-agent.com/us1/v5/datadog-rum.js:0
+[   11641ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://faucet.circle.com/_next/static/chunks/65851-47f87224c26fa861.js:0

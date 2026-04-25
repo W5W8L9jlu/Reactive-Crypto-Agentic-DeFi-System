@@ -1,0 +1,325 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - link "Circle Docs" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "Circle Docs" [ref=e7]
+      - link "Explore Docs" [ref=e9] [cursor=pointer]:
+        - /url: https://developers.circle.com
+        - button "Explore Docs" [ref=e10]:
+          - generic: Explore Docs
+    - generic [ref=e11]:
+      - generic [ref=e317]:
+        - generic [ref=e319]:
+          - generic [ref=e320]: Testnet Faucet
+          - generic [ref=e321]: Send testnet USDC and EURC to your wallet to experiment with fund flows in your app or smart contract for free.
+        - generic [ref=e322]:
+          - generic [ref=e323]:
+            - generic [ref=e327] [cursor=pointer]:
+              - generic [ref=e329]:
+                - img
+                - generic [ref=e330]: USDC
+              - radio [checked] [ref=e331]
+            - generic [ref=e335] [cursor=pointer]:
+              - generic [ref=e337]:
+                - img
+                - generic [ref=e338]: EURC
+              - radio [ref=e339]
+          - generic "Network" [ref=e340]:
+            - generic [ref=e341]:
+              - generic [ref=e343]: Network
+              - button "Network Arc Testnet" [expanded] [ref=e344] [cursor=pointer]:
+                - generic [ref=e346]: Arc Testnet
+                - generic [ref=e347]:
+                  - img
+                - generic [ref=e348]:
+                  - img
+              - listbox "Network" [active] [ref=e368]:
+                - option "Arc Testnet" [selected] [ref=e369] [cursor=pointer]:
+                  - generic [ref=e370]:
+                    - generic "Arc Testnet" [ref=e371]
+                    - generic [ref=e372]:
+                      - img
+                    - img [ref=e374]
+                - option "Ethereum Sepolia" [ref=e376] [cursor=pointer]:
+                  - generic [ref=e377]:
+                    - generic "Ethereum Sepolia" [ref=e378]
+                    - generic [ref=e379]:
+                      - img
+                - option "Algorand Testnet" [ref=e381] [cursor=pointer]:
+                  - generic [ref=e382]:
+                    - generic "Algorand Testnet" [ref=e383]
+                    - generic [ref=e384]:
+                      - img
+                - option "Aptos Testnet" [ref=e386] [cursor=pointer]:
+                  - generic [ref=e387]:
+                    - generic "Aptos Testnet" [ref=e388]
+                    - generic [ref=e389]:
+                      - img
+                - option "Arbitrum Sepolia" [ref=e391] [cursor=pointer]:
+                  - generic [ref=e392]:
+                    - generic "Arbitrum Sepolia" [ref=e393]
+                    - generic [ref=e394]:
+                      - img
+                - option "Avalanche Fuji" [ref=e396] [cursor=pointer]:
+                  - generic [ref=e397]:
+                    - generic "Avalanche Fuji" [ref=e398]
+                    - generic [ref=e399]:
+                      - img
+                - option "Base Sepolia" [ref=e401] [cursor=pointer]:
+                  - generic [ref=e402]:
+                    - generic "Base Sepolia" [ref=e403]
+                    - generic [ref=e404]:
+                      - img
+                - option "Celo Sepolia" [ref=e406] [cursor=pointer]:
+                  - generic [ref=e407]:
+                    - generic "Celo Sepolia" [ref=e408]
+                    - generic [ref=e409]:
+                      - img
+                - option "Codex Sepolia" [ref=e411] [cursor=pointer]:
+                  - generic [ref=e412]:
+                    - generic "Codex Sepolia" [ref=e413]
+                    - generic [ref=e414]:
+                      - img
+                - option "Edge Testnet" [ref=e416] [cursor=pointer]:
+                  - generic [ref=e417]:
+                    - generic "Edge Testnet" [ref=e418]
+                    - generic [ref=e419]:
+                      - img
+                - option "Hedera Testnet" [ref=e421] [cursor=pointer]:
+                  - generic [ref=e422]:
+                    - generic "Hedera Testnet" [ref=e423]
+                    - generic [ref=e424]:
+                      - img
+                - option "HyperEVM Testnet" [ref=e426] [cursor=pointer]:
+                  - generic [ref=e427]:
+                    - generic "HyperEVM Testnet" [ref=e428]
+                    - generic [ref=e429]:
+                      - img
+                - option "Injective Testnet" [ref=e431] [cursor=pointer]:
+                  - generic [ref=e432]:
+                    - generic "Injective Testnet" [ref=e433]
+                    - generic [ref=e434]:
+                      - img
+                - option "Ink Sepolia" [ref=e436] [cursor=pointer]:
+                  - generic [ref=e437]:
+                    - generic "Ink Sepolia" [ref=e438]
+                    - generic [ref=e439]:
+                      - img
+                - option "Linea Sepolia" [ref=e441] [cursor=pointer]:
+                  - generic [ref=e442]:
+                    - generic "Linea Sepolia" [ref=e443]
+                    - generic [ref=e444]:
+                      - img
+                - option "Monad Testnet" [ref=e446] [cursor=pointer]:
+                  - generic [ref=e447]:
+                    - generic "Monad Testnet" [ref=e448]
+                    - generic [ref=e449]:
+                      - img
+                - option "Morph Testnet" [ref=e451] [cursor=pointer]:
+                  - generic [ref=e452]:
+                    - generic "Morph Testnet" [ref=e453]
+                    - generic [ref=e454]:
+                      - img
+                - option "Near Testnet" [ref=e456] [cursor=pointer]:
+                  - generic [ref=e457]:
+                    - generic "Near Testnet" [ref=e458]
+                    - generic [ref=e459]:
+                      - img
+                - option "Noble Testnet" [ref=e461] [cursor=pointer]:
+                  - generic [ref=e462]:
+                    - generic "Noble Testnet" [ref=e463]
+                    - generic [ref=e464]:
+                      - img
+                - option "OP Sepolia" [ref=e466] [cursor=pointer]:
+                  - generic [ref=e467]:
+                    - generic "OP Sepolia" [ref=e468]
+                    - generic [ref=e469]:
+                      - img
+                - option "Polkadot Westend" [ref=e471] [cursor=pointer]:
+                  - generic [ref=e472]:
+                    - generic "Polkadot Westend" [ref=e473]
+                    - generic [ref=e474]:
+                      - img
+                - option "Pharos Testnet" [ref=e476] [cursor=pointer]:
+                  - generic [ref=e477]:
+                    - generic "Pharos Testnet" [ref=e478]
+                    - generic [ref=e479]:
+                      - img
+                - option "Plume Testnet" [ref=e481] [cursor=pointer]:
+                  - generic [ref=e482]:
+                    - generic "Plume Testnet" [ref=e483]
+                    - generic [ref=e484]:
+                      - img
+                - option "Polygon PoS Amoy" [ref=e486] [cursor=pointer]:
+                  - generic [ref=e487]:
+                    - generic "Polygon PoS Amoy" [ref=e488]
+                    - generic [ref=e489]:
+                      - img
+                - option "Sei Testnet" [ref=e491] [cursor=pointer]:
+                  - generic [ref=e492]:
+                    - generic "Sei Testnet" [ref=e493]
+                    - generic [ref=e494]:
+                      - img
+                - option "Solana Devnet" [ref=e496] [cursor=pointer]:
+                  - generic [ref=e497]:
+                    - generic "Solana Devnet" [ref=e498]
+                    - generic [ref=e499]:
+                      - img
+                - option "Sonic Testnet" [ref=e501] [cursor=pointer]:
+                  - generic [ref=e502]:
+                    - generic "Sonic Testnet" [ref=e503]
+                    - generic [ref=e504]:
+                      - img
+                - option "Starknet Sepolia" [ref=e506] [cursor=pointer]:
+                  - generic [ref=e507]:
+                    - generic "Starknet Sepolia" [ref=e508]
+                    - generic [ref=e509]:
+                      - img
+                - option "Sui Testnet" [ref=e511] [cursor=pointer]:
+                  - generic [ref=e512]:
+                    - generic "Sui Testnet" [ref=e513]
+                    - generic [ref=e514]:
+                      - img
+                - option "Unichain Sepolia" [ref=e516] [cursor=pointer]:
+                  - generic [ref=e517]:
+                    - generic "Unichain Sepolia" [ref=e518]
+                    - generic [ref=e519]:
+                      - img
+                - option "Worldchain Sepolia" [ref=e521] [cursor=pointer]:
+                  - generic [ref=e522]:
+                    - generic "Worldchain Sepolia" [ref=e523]
+                    - generic [ref=e524]:
+                      - img
+                - option "XDC Apothem" [ref=e526] [cursor=pointer]:
+                  - generic [ref=e527]:
+                    - generic "XDC Apothem" [ref=e528]
+                    - generic [ref=e529]:
+                      - img
+                - option "Stellar Testnet" [ref=e531] [cursor=pointer]:
+                  - generic [ref=e532]:
+                    - generic "Stellar Testnet" [ref=e533]
+                    - generic [ref=e534]:
+                      - img
+                - option "XRP Ledger Testnet" [ref=e536] [cursor=pointer]:
+                  - generic [ref=e537]:
+                    - generic "XRP Ledger Testnet" [ref=e538]
+                    - generic [ref=e539]:
+                      - img
+                - option "ZKsync Sepolia" [ref=e541] [cursor=pointer]:
+                  - generic [ref=e542]:
+                    - generic "ZKsync Sepolia" [ref=e543]
+                    - generic [ref=e544]:
+                      - img
+          - generic [ref=e349]:
+            - generic [ref=e351]: Send to
+            - textbox "Send to" [ref=e354]:
+              - /placeholder: Wallet address
+            - generic [ref=e355]: "Limit: One request per pairing of stablecoin and test network every 2 hours"
+          - generic [ref=e356]:
+            - iframe [ref=e361]:
+              - generic [ref=f15e2]:
+                - generic [ref=f15e16]: 验证已过期。请重新选中复选框。
+                - generic [ref=f15e3]:
+                  - checkbox "进行人机身份验证" [ref=f15e7]
+                  - generic [ref=f15e11]: 进行人机身份验证
+                - generic [ref=f15e15]: reCAPTCHA
+            - paragraph [ref=e362]: We detect unusual traffic from your request. Please verify that you are not a bot and submit again.
+          - button "Send 20 USDC" [disabled]:
+            - generic: Send 20 USDC
+      - generic [ref=e56]:
+        - generic [ref=e59]: Frequently Asked Questions
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - button "What is a testnet?" [ref=e62] [cursor=pointer]:
+              - generic [ref=e63]: What is a testnet?
+              - img [ref=e65]
+            - generic [ref=e67]: A testnet is an instance of a blockchain used specifically for testing. In contrast to a mainnet blockchain, which represents a production environment, testnets allow developers to test their apps and smart contracts without risking assets with real-world value. Testnet tokens are assets that can be freely obtained from testnet faucets to experiment with funds flows on testnets.
+          - generic [ref=e68]:
+            - button "How can I get native tokens on testnet like ETH and POL?" [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]: How can I get native tokens on testnet like ETH and POL?
+              - img [ref=e72]
+            - generic [ref=e74]:
+              - text: Developers can use Circle's Faucet in the Developer Console to obtain testnet ETH and POL. Testnet tokens generated from the Developer Console will be sent to wallet addresses created with Circle Wallets.
+              - link [ref=e75] [cursor=pointer]:
+                - /url: https://console.circle.com
+                - text: Get started for free
+              - text: .
+          - generic [ref=e76]:
+            - button "What's the difference between this Faucet and the Faucet in the Developer Console?" [ref=e77] [cursor=pointer]:
+              - generic [ref=e78]: What's the difference between this Faucet and the Faucet in the Developer Console?
+              - img [ref=e80]
+            - generic [ref=e82]:
+              - text: This Faucet is public and permissionless for anyone to use. There's no account required, and it can provide free access to testnet USDC and EURC on all supported blockchains. The Faucet in the Developer Console provides free access to both native tokens on testnet like ETH and POL and stablecoin tokens on testnet like USDC and EURC. It can only fund wallet addresses created with Circle Wallets.
+              - link [ref=e83] [cursor=pointer]:
+                - /url: https://console.circle.com
+                - text: Get started for free
+              - text: .
+          - generic [ref=e84]:
+            - button "Which testnets does this Faucet support?" [ref=e85] [cursor=pointer]:
+              - generic [ref=e86]: Which testnets does this Faucet support?
+              - img [ref=e88]
+            - generic [ref=e90]:
+              - text: This Faucet provides access to testnet tokens on every blockchain that supports USDC and EURC. See our docs for
+              - link [ref=e91] [cursor=pointer]:
+                - /url: https://developers.circle.com/stablecoins/docs/usdc-on-test-networks
+                - text: USDC testnet addresses
+              - text: and
+              - link [ref=e92] [cursor=pointer]:
+                - /url: https://developers.circle.com/stablecoins/docs/eurc-on-test-networks
+                - text: EURC testnet addresses
+              - text: .
+          - generic [ref=e93]:
+            - button "How much USDC can I get from this Faucet?" [ref=e94] [cursor=pointer]:
+              - generic [ref=e95]: How much USDC can I get from this Faucet?
+              - img [ref=e97]
+            - generic [ref=e99]:
+              - text: Developers can request 20 USDC on testnet every 2 hours, per address, and per blockchain. If you need more, you can submit a request on Circle's
+              - link [ref=e100] [cursor=pointer]:
+                - /url: https://discord.com/invite/buildoncircle
+                - text: Discord
+              - text: .
+          - generic [ref=e101]:
+            - button "Why am I seeing an error message of “Limit Exceeded”?" [ref=e102] [cursor=pointer]:
+              - generic [ref=e103]: Why am I seeing an error message of “Limit Exceeded”?
+              - img [ref=e105]
+            - generic [ref=e107]:
+              - text: This means that you have exceeded a limit and you will need to wait to try again. Developers can request 20 USDC on testnet every 2 hours, per address, and per blockchain. If you need more, you can submit a request on Circle's
+              - link [ref=e108] [cursor=pointer]:
+                - /url: https://discord.com/invite/buildoncircle
+                - text: Discord
+              - text: .
+          - generic [ref=e109]:
+            - button "How can I get testnet USDC if the testnet I need it on isn't listed in the network dropdown?" [ref=e110] [cursor=pointer]:
+              - generic [ref=e111]: How can I get testnet USDC if the testnet I need it on isn't listed in the network dropdown?
+              - img [ref=e113]
+            - generic [ref=e115]:
+              - text: If the chain you're trying to access testnet USDC on isn't listed, you can use CCTP to move USDC from Ethereum Sepolia to your target chain (as long as the target is supported by CCTP). Follow the
+              - link [ref=e116] [cursor=pointer]:
+                - /url: https://developers.circle.com/stablecoins/transfer-usdc-on-testnet-from-ethereum-to-avalanche
+                - text: CCTP Quickstart Guide
+              - text: in the Developer Docs and make sure to select CCTP for testnet transfers across chains.
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - link "Developer Terms" [ref=e121] [cursor=pointer]:
+          - /url: https://console.circle.com/legal/developer-terms
+        - link "Service Terms" [ref=e122] [cursor=pointer]:
+          - /url: https://console.circle.com/legal/service-terms
+        - link "Privacy Policy" [ref=e123] [cursor=pointer]:
+          - /url: https://www.circle.com/en/legal/privacy-policy
+        - link "Your Privacy Choices Your Privacy Choices" [ref=e124] [cursor=pointer]:
+          - /url: "#"
+          - text: Your Privacy Choices
+          - img "Your Privacy Choices" [ref=e125]
+      - generic [ref=e126]:
+        - link [ref=e127] [cursor=pointer]:
+          - /url: https://discord.com/invite/buildoncircle
+          - img
+        - link [ref=e128] [cursor=pointer]:
+          - /url: https://twitter.com/BuildOnCircle
+          - img
+        - link [ref=e129] [cursor=pointer]:
+          - /url: https://www.youtube.com/playlist?list=PLoJwRn8qrG24wgM802HEDGtzfIL6D9PYW
+          - img
+  - alert [ref=e130]
+  - status [ref=e131]

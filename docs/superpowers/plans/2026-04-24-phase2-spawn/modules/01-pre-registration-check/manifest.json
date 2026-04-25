@@ -1,0 +1,28 @@
+{
+  "workflow": "Module Execution",
+  "status": "ReadyForSpawn",
+  "module_id": "pre_registration_check",
+  "title": "PreRegistrationCheck",
+  "phase": "Decision Boundary",
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/07_data/02_source_of_truth_rules.md",
+    "docs/knowledge/04_execution/01_execution_compiler.md",
+    "docs/knowledge/03_strategy_validation/03_pre_registration_check.md",
+    "docs/contracts/pre_registration_check.contract.md",
+    "docs/prompts/pre_registration_check.prompt.md"
+  ],
+  "only_edit": [
+    "backend/validation/pre_registration_check.py"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/validation/test_pre_registration_check.py -q"
+  ],
+  "files": {
+    "draft": "draft.json",
+    "review": "review.md",
+    "approved": "approved.json",
+    "spawn": "spawn.json"
+  }
+}

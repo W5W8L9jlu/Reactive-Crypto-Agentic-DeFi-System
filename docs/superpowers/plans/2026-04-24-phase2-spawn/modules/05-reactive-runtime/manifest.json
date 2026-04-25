@@ -1,0 +1,28 @@
+{
+  "workflow": "Module Execution",
+  "status": "ReadyForSpawn",
+  "module_id": "reactive_runtime",
+  "title": "Reactive Runtime",
+  "phase": "Reactive and Safety",
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/05_reactive_contracts/02_investment_state_machine.md",
+    "docs/knowledge/04_execution/02_execution_layer.md",
+    "docs/knowledge/05_reactive_contracts/01_reactive_runtime.md",
+    "docs/contracts/reactive_runtime.contract.md",
+    "docs/prompts/reactive_runtime.prompt.md"
+  ],
+  "only_edit": [
+    "backend/reactive/adapters/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/reactive/adapters/test_reactive_runtime.py -q"
+  ],
+  "files": {
+    "draft": "draft.json",
+    "review": "review.md",
+    "approved": "approved.json",
+    "spawn": "spawn.json"
+  }
+}

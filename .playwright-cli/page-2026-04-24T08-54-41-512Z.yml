@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e130]
+  - status [ref=e131]
+  - generic [ref=e385]:
+    - link "Circle Docs" [ref=e387] [cursor=pointer]:
+      - /url: /
+      - img "Circle Docs" [ref=e388]
+    - generic [ref=e389]:
+      - heading "糟糕" [level=1] [ref=e390]:
+        - generic [ref=e391]: 糟糕
+      - paragraph [ref=e392]:
+        - generic [ref=e393]: 抱歉，出错了。
+      - paragraph [ref=e394]:
+        - generic [ref=e395]: 我们的团队正在调查此事。
+      - button "再试一次" [ref=e396] [cursor=pointer]:
+        - generic:
+          - generic: 再试一次
+    - img "背景图片" [ref=e397]

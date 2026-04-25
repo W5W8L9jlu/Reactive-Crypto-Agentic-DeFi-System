@@ -106,3 +106,33 @@ C:\Python314\python.exe -m backend.cli.entrypoint execution force-close 0x4a5de8
 - tx hash: `0x0ba51cd04c0ae79da4f99374770355541763f4f33fd06fa3ea40eb96d1a978dd`
 - block: `10627945`
 - status: `success`
+
+---
+
+## 2026-04-24 真实链 smoke 结果
+
+### 执行命令
+```bash
+python scripts/check_sepolia_smoke_env.py
+python scripts/run_sepolia_smoke.py
+```
+
+### 产物
+- [sepolia_smoke_20260424-043038.json](D:/reactive-crypto-agentic-DeFi-system/docs/acceptance/threads/wave5/artifacts/sepolia_smoke_20260424-043038.json)
+
+### 真实链结果
+- env check: `Sepolia smoke env check: OK`
+- register tx: `0x64483ba7a713eb178adf94f8da89d4cfb742a3563e7377192e78d171263191e0`
+- entry tx: `0x01879303366426cef6d4a3ee30c5950a8e25f1d17ee2464fcd957cfc941a8729`
+- force-close tx: `0x1beb88ea87fce8ed76c2f034ef040e375890993cea2509a3737108930a9898f5`
+- final state: `Closed`
+
+## 2026-04-24 关键告警触发证据
+
+- 本次 smoke 的 critical 路径由脚本内置条件驱动：`ShadowMonitor(grace_period_seconds=0)`，并使用 breached snapshot（`mark_price=2910`，`threshold_price=2950`）。
+- artifact: `docs/acceptance/threads/wave5/artifacts/sepolia_smoke_20260424-043038.json`
+- 记录结果：
+  - `monitor_alert_count: 1`
+  - `force_close_recommendation_count: 1`
+  - `final_state: Closed`
+- 事实范围：本段仅确认该 smoke 触发了关键告警与 force-close recommendation 路径，不额外推断其他运行行为。

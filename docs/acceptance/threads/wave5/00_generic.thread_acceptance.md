@@ -51,3 +51,4 @@
 - 线程状态：`PASS_WITH_NOTES`
 - 进入线程间对接：`可以（需携带未验证项）`
 - 作为 Phase 1 发布快照直接交付：`不可以`
+- 补充证据：`phase1_real_rpc_gate_base_sepolia.test_evidence.md` 已记录 Base Sepolia 真实 RPC 门禁结果与后续补操作，结论是 `DecisionContextBuilder -> PreRegistrationCheck` 跑通；当前钱包在该链上已更新到 `balance=20`、`allowance=200`，但默认 `position_usd=200` 下仍按规则返回 `InsufficientBalanceError`，属于正确拒绝。

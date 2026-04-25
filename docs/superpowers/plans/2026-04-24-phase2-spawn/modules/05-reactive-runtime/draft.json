@@ -1,0 +1,107 @@
+{
+  "module_id": "reactive_runtime",
+  "title": "Reactive Runtime",
+  "phase": "Reactive and Safety",
+  "workflow_roles": {
+    "developer": "Backend Architect",
+    "tester": "API Tester",
+    "analyzer": "Test Results Analyzer",
+    "reviewer": "Code Reviewer",
+    "git_master": "Git Workflow Master",
+    "gate": "SRE",
+    "senior_developer": "Senior Developer"
+  },
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/05_reactive_contracts/02_investment_state_machine.md",
+    "docs/knowledge/04_execution/02_execution_layer.md",
+    "docs/knowledge/05_reactive_contracts/01_reactive_runtime.md",
+    "docs/contracts/reactive_runtime.contract.md",
+    "docs/prompts/reactive_runtime.prompt.md"
+  ],
+  "only_edit": [
+    "backend/reactive/adapters/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/reactive/adapters/test_reactive_runtime.py -q"
+  ],
+  "status": "Draft",
+  "summary": {
+    "module_id": "reactive_runtime",
+    "title": "Reactive Runtime",
+    "goal": "Implement module scope: 支持入场/止损/止盈触发; 与状态机契约对接",
+    "acceptance_highlights": [
+      "支持入场/止损/止盈触发",
+      "与状态机契约对接",
+      "entry trigger 测试"
+    ],
+    "non_goals_highlights": [
+      "投资建议",
+      "策略评估",
+      "链下兜底决策"
+    ],
+    "risks_highlights": [
+      "Reactive 负责事件驱动与 callback，不做自由决策",
+      "入场与出场都经由状态机",
+      "保留事件驱动逻辑与 callback 验证"
+    ]
+  },
+  "draft": {
+    "module_id": "reactive_runtime",
+    "title": "Reactive Runtime",
+    "goal": "Implement module scope: 支持入场/止损/止盈触发; 与状态机契约对接",
+    "acceptance": [
+      "支持入场/止损/止盈触发",
+      "与状态机契约对接",
+      "entry trigger 测试",
+      "stop/take trigger 测试",
+      "callback 验证测试"
+    ],
+    "non_goals": [
+      "投资建议",
+      "策略评估",
+      "链下兜底决策"
+    ],
+    "risks": [
+      "Reactive 负责事件驱动与 callback，不做自由决策",
+      "入场与出场都经由状态机",
+      "保留事件驱动逻辑与 callback 验证",
+      "不得向其他模块偷偷引入新行为。",
+      "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+      "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+    ],
+    "instructions": [],
+    "sources": {
+      "scope": [
+        "支持入场/止损/止盈触发",
+        "与状态机契约对接"
+      ],
+      "definition_of_done": [
+        "支持入场/止损/止盈触发",
+        "与状态机契约对接"
+      ],
+      "minimum_verification": [
+        "entry trigger 测试",
+        "stop/take trigger 测试",
+        "callback 验证测试"
+      ],
+      "non_goals": [
+        "投资建议",
+        "策略评估",
+        "链下兜底决策"
+      ],
+      "hard_invariants": [
+        "Reactive 负责事件驱动与 callback，不做自由决策",
+        "入场与出场都经由状态机",
+        "保留事件驱动逻辑与 callback 验证"
+      ],
+      "handoff_contract": [
+        "不得向其他模块偷偷引入新行为。",
+        "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+        "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+      ]
+    }
+  },
+  "markdown": "# Draft Task Card\n\n## Header\n\n- `模块：` Reactive Runtime (`reactive_runtime`)\n- `负责人 agent：` Backend Architect\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 支持入场/止损/止盈触发; 与状态机契约对接\n\n## 2. 验收标准\n\n- [ ] 支持入场/止损/止盈触发\n- [ ] 与状态机契约对接\n- [ ] entry trigger 测试\n- [ ] stop/take trigger 测试\n- [ ] callback 验证测试\n\n## 3. 非目标\n\n- 投资建议\n- 策略评估\n- 链下兜底决策\n\n## 4. 风险\n\n- Reactive 负责事件驱动与 callback，不做自由决策\n- 入场与出场都经由状态机\n- 保留事件驱动逻辑与 callback 验证\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/05_reactive_contracts/01_reactive_runtime.md`\n- `docs/contracts/reactive_runtime.contract.md`\n- `docs/prompts/reactive_runtime.prompt.md`"
+}

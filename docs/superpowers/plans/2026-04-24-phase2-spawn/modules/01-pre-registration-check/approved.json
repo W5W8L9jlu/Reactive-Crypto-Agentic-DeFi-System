@@ -1,0 +1,106 @@
+{
+  "module_id": "pre_registration_check",
+  "title": "PreRegistrationCheck",
+  "phase": "Decision Boundary",
+  "workflow_roles": {
+    "developer": "Backend Architect",
+    "tester": "API Tester",
+    "analyzer": "Test Results Analyzer",
+    "reviewer": "Code Reviewer",
+    "git_master": "Git Workflow Master",
+    "gate": "Product Manager",
+    "senior_developer": "Senior Developer"
+  },
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/07_data/02_source_of_truth_rules.md",
+    "docs/knowledge/04_execution/01_execution_compiler.md",
+    "docs/knowledge/03_strategy_validation/03_pre_registration_check.md",
+    "docs/contracts/pre_registration_check.contract.md",
+    "docs/prompts/pre_registration_check.prompt.md"
+  ],
+  "only_edit": [
+    "backend/validation/pre_registration_check.py"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/validation/test_pre_registration_check.py -q"
+  ],
+  "status": "Approved",
+  "summary": {
+    "module_id": "pre_registration_check",
+    "title": "PreRegistrationCheck",
+    "goal": "Implement module scope: 复核 reserve/slippage/balance/allowance/gas/TTL; 给出明确 abort reason",
+    "acceptance_highlights": [
+      "复核 reserve/slippage/balance/allowance/gas/TTL",
+      "给出明确 abort reason",
+      "gas 太高拒绝"
+    ],
+    "non_goals_highlights": [
+      "运行时 require 检查",
+      "触发后重新决策"
+    ],
+    "risks_highlights": [
+      "注册前检查只信 RPC",
+      "必须校验 Gas / Expected Profit",
+      "只负责注册时可行性，不做运行时最终防守"
+    ]
+  },
+  "draft": {
+    "module_id": "pre_registration_check",
+    "title": "PreRegistrationCheck",
+    "goal": "Implement module scope: 复核 reserve/slippage/balance/allowance/gas/TTL; 给出明确 abort reason",
+    "acceptance": [
+      "复核 reserve/slippage/balance/allowance/gas/TTL",
+      "给出明确 abort reason",
+      "gas 太高拒绝",
+      "TTL 过期拒绝",
+      "allowance/balance 不足拒绝"
+    ],
+    "non_goals": [
+      "运行时 require 检查",
+      "触发后重新决策"
+    ],
+    "risks": [
+      "注册前检查只信 RPC",
+      "必须校验 Gas / Expected Profit",
+      "只负责注册时可行性，不做运行时最终防守",
+      "失败快速抛异常",
+      "不得向其他模块偷偷引入新行为。",
+      "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+      "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+    ],
+    "instructions": [],
+    "sources": {
+      "scope": [
+        "复核 reserve/slippage/balance/allowance/gas/TTL",
+        "给出明确 abort reason"
+      ],
+      "definition_of_done": [
+        "复核 reserve/slippage/balance/allowance/gas/TTL",
+        "给出明确 abort reason"
+      ],
+      "minimum_verification": [
+        "gas 太高拒绝",
+        "TTL 过期拒绝",
+        "allowance/balance 不足拒绝"
+      ],
+      "non_goals": [
+        "运行时 require 检查",
+        "触发后重新决策"
+      ],
+      "hard_invariants": [
+        "注册前检查只信 RPC",
+        "必须校验 Gas / Expected Profit",
+        "只负责注册时可行性，不做运行时最终防守",
+        "失败快速抛异常"
+      ],
+      "handoff_contract": [
+        "不得向其他模块偷偷引入新行为。",
+        "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+        "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+      ]
+    }
+  },
+  "markdown": "# Draft Task Card\n\n## Header\n\n- `模块：` PreRegistrationCheck (`pre_registration_check`)\n- `负责人 agent：` Backend Architect\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 复核 reserve/slippage/balance/allowance/gas/TTL; 给出明确 abort reason\n\n## 2. 验收标准\n\n- [ ] 复核 reserve/slippage/balance/allowance/gas/TTL\n- [ ] 给出明确 abort reason\n- [ ] gas 太高拒绝\n- [ ] TTL 过期拒绝\n- [ ] allowance/balance 不足拒绝\n\n## 3. 非目标\n\n- 运行时 require 检查\n- 触发后重新决策\n\n## 4. 风险\n\n- 注册前检查只信 RPC\n- 必须校验 Gas / Expected Profit\n- 只负责注册时可行性，不做运行时最终防守\n- 失败快速抛异常\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/03_strategy_validation/03_pre_registration_check.md`\n- `docs/contracts/pre_registration_check.contract.md`\n- `docs/prompts/pre_registration_check.prompt.md`"
+}

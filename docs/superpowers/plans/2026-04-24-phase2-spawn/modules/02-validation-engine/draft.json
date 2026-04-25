@@ -1,0 +1,112 @@
+{
+  "module_id": "validation_engine",
+  "title": "Validation Engine",
+  "phase": "Decision Boundary",
+  "workflow_roles": {
+    "developer": "Backend Architect",
+    "tester": "API Tester",
+    "analyzer": "Test Results Analyzer",
+    "reviewer": "Code Reviewer",
+    "git_master": "Git Workflow Master",
+    "gate": "Product Manager",
+    "senior_developer": "Senior Developer"
+  },
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/03_strategy_validation/01_strategy_boundary.md",
+    "docs/knowledge/03_strategy_validation/02_validation_engine.md",
+    "docs/contracts/validation_engine.contract.md",
+    "docs/prompts/validation_engine.prompt.md"
+  ],
+  "only_edit": [
+    "backend/validation/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/validation/test_phase1_real_rpc_gate.py -q",
+    "python -m pytest backend/validation/test_pre_registration_check.py -q",
+    "python -m pytest backend/validation/test_strategy_risk_boundaries.py -q",
+    "python -m pytest backend/validation/test_validation_engine.py -q"
+  ],
+  "status": "Draft",
+  "summary": {
+    "module_id": "validation_engine",
+    "title": "Validation Engine",
+    "goal": "Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult",
+    "acceptance_highlights": [
+      "所有核心对象先解析为强类型对象",
+      "抛出清晰 ValidationError 或领域异常",
+      "输出 ValidationResult"
+    ],
+    "non_goals_highlights": [
+      "RPC 查询",
+      "calldata 编译",
+      "审批展示"
+    ],
+    "risks_highlights": [
+      "必须基于 Pydantic v2",
+      "禁止散落 if/else schema 校验",
+      "不做链上状态确认"
+    ]
+  },
+  "draft": {
+    "module_id": "validation_engine",
+    "title": "Validation Engine",
+    "goal": "Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult",
+    "acceptance": [
+      "所有核心对象先解析为强类型对象",
+      "抛出清晰 ValidationError 或领域异常",
+      "输出 ValidationResult",
+      "字段范围校验",
+      "跨字段 model_validator 校验",
+      "非法对象拒绝测试"
+    ],
+    "non_goals": [
+      "RPC 查询",
+      "calldata 编译",
+      "审批展示"
+    ],
+    "risks": [
+      "必须基于 Pydantic v2",
+      "禁止散落 if/else schema 校验",
+      "不做链上状态确认",
+      "不得向其他模块偷偷引入新行为。",
+      "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+      "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+    ],
+    "instructions": [],
+    "sources": {
+      "scope": [
+        "所有核心对象先解析为强类型对象",
+        "抛出清晰 ValidationError 或领域异常",
+        "输出 ValidationResult"
+      ],
+      "definition_of_done": [
+        "所有核心对象先解析为强类型对象",
+        "抛出清晰 ValidationError 或领域异常",
+        "输出 ValidationResult"
+      ],
+      "minimum_verification": [
+        "字段范围校验",
+        "跨字段 model_validator 校验",
+        "非法对象拒绝测试"
+      ],
+      "non_goals": [
+        "RPC 查询",
+        "calldata 编译",
+        "审批展示"
+      ],
+      "hard_invariants": [
+        "必须基于 Pydantic v2",
+        "禁止散落 if/else schema 校验",
+        "不做链上状态确认"
+      ],
+      "handoff_contract": [
+        "不得向其他模块偷偷引入新行为。",
+        "需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。",
+        "无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。"
+      ]
+    }
+  },
+  "markdown": "# Draft Task Card\n\n## Header\n\n- `模块：` Validation Engine (`validation_engine`)\n- `负责人 agent：` Backend Architect\n- `状态：` Draft\n- `来源：` 用户目标 / contract / prompt / knowledge\n\n## 1. 目标\n\n- Implement module scope: 所有核心对象先解析为强类型对象; 抛出清晰 ValidationError 或领域异常; 输出 ValidationResult\n\n## 2. 验收标准\n\n- [ ] 所有核心对象先解析为强类型对象\n- [ ] 抛出清晰 ValidationError 或领域异常\n- [ ] 输出 ValidationResult\n- [ ] 字段范围校验\n- [ ] 跨字段 model_validator 校验\n- [ ] 非法对象拒绝测试\n\n## 3. 非目标\n\n- RPC 查询\n- calldata 编译\n- 审批展示\n\n## 4. 风险\n\n- 必须基于 Pydantic v2\n- 禁止散落 if/else schema 校验\n- 不做链上状态确认\n- 不得向其他模块偷偷引入新行为。\n- 需要跨模块接口时，只能通过显式 schema / interface / adapter 接入。\n- 无法从 knowledge files 证明的行为，必须保留 `TODO:` 或抛出明确异常。\n\n## 5. 依据\n\n- `docs/knowledge/01_core/01_system_invariants.md`\n- `docs/knowledge/01_core/02_domain_models.md`\n- `docs/knowledge/03_strategy_validation/02_validation_engine.md`\n- `docs/contracts/validation_engine.contract.md`\n- `docs/prompts/validation_engine.prompt.md`"
+}

@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "first_run_order": [
+    "provider_architecture",
+    "decision_context_builder",
+    "strategy_boundary_service",
+    "cryptoagents_adapter",
+    "validation_engine",
+    "pre_registration_check",
+    "approval_flow",
+    "execution_compiler",
+    "investment_state_machine_contract",
+    "execution_layer",
+    "reactive_runtime",
+    "shadow_monitor",
+    "emergency_force_close",
+    "cli_surface",
+    "export_outputs"
+  ],
+  "phases": [
+    {
+      "name": "Project Decomposition",
+      "modules": []
+    },
+    {
+      "name": "Data Foundation",
+      "modules": [
+        "provider_architecture",
+        "decision_context_builder"
+      ]
+    },
+    {
+      "name": "Decision Boundary",
+      "modules": [
+        "strategy_boundary_service",
+        "cryptoagents_adapter",
+        "validation_engine",
+        "pre_registration_check"
+      ]
+    },
+    {
+      "name": "Registration and Execution",
+      "modules": [
+        "approval_flow",
+        "execution_compiler",
+        "investment_state_machine_contract",
+        "execution_layer"
+      ]
+    },
+    {
+      "name": "Reactive and Safety",
+      "modules": [
+        "reactive_runtime",
+        "shadow_monitor",
+        "emergency_force_close"
+      ]
+    },
+    {
+      "name": "Surface and Delivery",
+      "modules": [
+        "cli_surface",
+        "export_outputs"
+      ]
+    }
+  ],
+  "module_roles": {
+    "provider_architecture": {
+      "developer": "Data Engineer",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "decision_context_builder": {
+      "developer": "Data Engineer",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "strategy_boundary_service": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "cryptoagents_adapter": {
+      "developer": "AI Engineer",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "validation_engine": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "pre_registration_check": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "approval_flow": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "execution_compiler": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "investment_state_machine_contract": {
+      "developer": "Solidity Smart Contract Engineer",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Blockchain Security Auditor"
+    },
+    "execution_layer": {
+      "developer": "Solidity Smart Contract Engineer",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Blockchain Security Auditor"
+    },
+    "reactive_runtime": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "SRE"
+    },
+    "shadow_monitor": {
+      "developer": "SRE",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "SRE"
+    },
+    "emergency_force_close": {
+      "developer": "Solidity Smart Contract Engineer",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Blockchain Security Auditor"
+    },
+    "cli_surface": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    },
+    "export_outputs": {
+      "developer": "Backend Architect",
+      "tester": "API Tester",
+      "analyzer": "Test Results Analyzer",
+      "reviewer": "Code Reviewer",
+      "git_master": "Git Workflow Master",
+      "gate": "Product Manager"
+    }
+  }
+}

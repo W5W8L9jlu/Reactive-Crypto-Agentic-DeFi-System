@@ -1,0 +1,363 @@
+{
+  "workflow": "Project Decomposition",
+  "status": "ReadyForSpawn",
+  "role": "Technical Writer",
+  "group": "final-synthesis",
+  "group_mode": "after-review",
+  "spawn_order": 5,
+  "depends_on": [
+    "Product Manager",
+    "Workflow Architect",
+    "Software Architect",
+    "Senior Project Manager"
+  ],
+  "spawn_agent": {
+    "message": "You are the `Technical Writer` in the Project Decomposition workflow.\nUse the approved decomposition proposal as the source of truth.\nProject goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁\nRecommended mode: `project-decomposition`\nContext constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系\n\nTask:\n- Wait for the four review outputs before final synthesis.\n- Merge the approved split with the review notes into the final decomposition proposal.\n- Preserve the existing hard invariants and the approved phase plan.\n\nReturn format:\n- Return final Markdown with sections for synthesis, each role, review gate, top candidates, phase plan, and next step.\n\nDependencies:\n- Wait for `Product Manager` output before final synthesis.\n- Wait for `Workflow Architect` output before final synthesis.\n- Wait for `Software Architect` output before final synthesis.\n- Wait for `Senior Project Manager` output before final synthesis.",
+    "items": [
+      {
+        "type": "text",
+        "text": "You are the `Technical Writer` in the Project Decomposition workflow.\nUse the approved decomposition proposal as the source of truth.\nProject goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁\nRecommended mode: `project-decomposition`\nContext constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系\n\nTask:\n- Wait for the four review outputs before final synthesis.\n- Merge the approved split with the review notes into the final decomposition proposal.\n- Preserve the existing hard invariants and the approved phase plan.\n\nReturn format:\n- Return final Markdown with sections for synthesis, each role, review gate, top candidates, phase plan, and next step.\n\nDependencies:\n- Wait for `Product Manager` output before final synthesis.\n- Wait for `Workflow Architect` output before final synthesis.\n- Wait for `Software Architect` output before final synthesis.\n- Wait for `Senior Project Manager` output before final synthesis."
+      },
+      {
+        "type": "text",
+        "text": "Approved decomposition proposal:\n```markdown\n# Project Decomposition\n\n- `状态：` Proposed\n\n## Technical Writer Synthesis\n\n- Project decomposition required before module-level draft\n\n## Product Manager\n\n- Project goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁\n- Keep scope aligned to module contracts and existing workflow phases.\n- No module-level draft before decomposition approval.\n- Context constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系\n\n## Workflow Architect\n\n- Recommended mode: `project-decomposition`\n\n## Software Architect\n\n- Validate boundaries against contract scope, handoff, and non-goal clauses.\n- Prefer a single module only when one candidate clearly dominates.\n- Top candidate: execution_layer (Registration and Execution)\n\n## Senior Project Manager\n\n- `Decision Boundary`: pre_registration_check, validation_engine\n- `Registration and Execution`: execution_layer, execution_compiler\n- `Reactive and Safety`: reactive_runtime\n\n## Review Gate\n\n- This proposal must be approved before module-level `draft`.\n\n## Top Candidates\n\n- `execution_layer` (Execution Layer)\n  - Phase: `Registration and Execution`\n  - Score: `9`\n  - Roles: developer `Solidity Smart Contract Engineer`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Blockchain Security Auditor`\n  - Signals: token overlap: execution, export, layer, reactive, goal references module id, goal references module group\n- `pre_registration_check` (PreRegistrationCheck)\n  - Phase: `Decision Boundary`\n  - Score: `8`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: check, pre, registration, validation, goal references module id, goal references module group\n- `validation_engine` (Validation Engine)\n  - Phase: `Decision Boundary`\n  - Score: `7`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: 2, engine, validation, goal references module id, goal references module group\n- `execution_compiler` (Execution Compiler)\n  - Phase: `Registration and Execution`\n  - Score: `6`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: compiler, execution, goal references module id, goal references module group\n- `reactive_runtime` (Reactive Runtime)\n  - Phase: `Reactive and Safety`\n  - Score: `6`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `SRE`\n  - Signals: token overlap: reactive, runtime, goal references module id, goal references module group\n\n## Phase Plan\n\n- `Decision Boundary`: pre_registration_check, validation_engine\n- `Registration and Execution`: execution_layer, execution_compiler\n- `Reactive and Safety`: reactive_runtime\n\n## Next Step\n\n- Approve the split, then run `spawn-decomposition` to generate role packets.\n```"
+      },
+      {
+        "type": "text",
+        "text": "Deterministic draft for this role:\n```json\n{\n  \"role\": \"Technical Writer\",\n  \"synthesis\": \"# Project Decomposition\\n\\n- `状态：` Proposed\\n\\n## Technical Writer Synthesis\\n\\n- Project decomposition required before module-level draft\\n\\n## Product Manager\\n\\n- Project goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁\\n- Keep scope aligned to module contracts and existing workflow phases.\\n- No module-level draft before decomposition approval.\\n- Context constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系\\n\\n## Workflow Architect\\n\\n- Recommended mode: `project-decomposition`\\n\\n## Software Architect\\n\\n- Validate boundaries against contract scope, handoff, and non-goal clauses.\\n- Prefer a single module only when one candidate clearly dominates.\\n- Top candidate: execution_layer (Registration and Execution)\\n\\n## Senior Project Manager\\n\\n- `Decision Boundary`: pre_registration_check, validation_engine\\n- `Registration and Execution`: execution_layer, execution_compiler\\n- `Reactive and Safety`: reactive_runtime\\n\\n## Review Gate\\n\\n- This proposal must be approved before module-level `draft`.\\n\\n## Top Candidates\\n\\n- `execution_layer` (Execution Layer)\\n  - Phase: `Registration and Execution`\\n  - Score: `9`\\n  - Roles: developer `Solidity Smart Contract Engineer`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Blockchain Security Auditor`\\n  - Signals: token overlap: execution, export, layer, reactive, goal references module id, goal references module group\\n- `pre_registration_check` (PreRegistrationCheck)\\n  - Phase: `Decision Boundary`\\n  - Score: `8`\\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\\n  - Signals: token overlap: check, pre, registration, validation, goal references module id, goal references module group\\n- `validation_engine` (Validation Engine)\\n  - Phase: `Decision Boundary`\\n  - Score: `7`\\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\\n  - Signals: token overlap: 2, engine, validation, goal references module id, goal references module group\\n- `execution_compiler` (Execution Compiler)\\n  - Phase: `Registration and Execution`\\n  - Score: `6`\\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\\n  - Signals: token overlap: compiler, execution, goal references module id, goal references module group\\n- `reactive_runtime` (Reactive Runtime)\\n  - Phase: `Reactive and Safety`\\n  - Score: `6`\\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `SRE`\\n  - Signals: token overlap: reactive, runtime, goal references module id, goal references module group\\n\\n## Phase Plan\\n\\n- `Decision Boundary`: pre_registration_check, validation_engine\\n- `Registration and Execution`: execution_layer, execution_compiler\\n- `Reactive and Safety`: reactive_runtime\\n\\n## Next Step\\n\\n- Approve the split, then run `spawn-decomposition` to generate role packets.\"\n}\n```"
+      }
+    ]
+  },
+  "source_proposal": {
+    "goal": "制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁",
+    "context": [
+      "保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系"
+    ],
+    "goal_text": "制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系",
+    "recommended_mode": "project-decomposition",
+    "recommended_module": null,
+    "top_modules": [
+      {
+        "module_id": "execution_layer",
+        "title": "Execution Layer",
+        "phase": "Registration and Execution",
+        "score": 9,
+        "signals": [
+          "token overlap: execution, export, layer, reactive",
+          "goal references module id",
+          "goal references module group"
+        ],
+        "workflow_roles": {
+          "developer": "Solidity Smart Contract Engineer",
+          "tester": "API Tester",
+          "analyzer": "Test Results Analyzer",
+          "reviewer": "Code Reviewer",
+          "git_master": "Git Workflow Master",
+          "gate": "Blockchain Security Auditor",
+          "senior_developer": "Senior Developer"
+        }
+      },
+      {
+        "module_id": "pre_registration_check",
+        "title": "PreRegistrationCheck",
+        "phase": "Decision Boundary",
+        "score": 8,
+        "signals": [
+          "token overlap: check, pre, registration, validation",
+          "goal references module id",
+          "goal references module group"
+        ],
+        "workflow_roles": {
+          "developer": "Backend Architect",
+          "tester": "API Tester",
+          "analyzer": "Test Results Analyzer",
+          "reviewer": "Code Reviewer",
+          "git_master": "Git Workflow Master",
+          "gate": "Product Manager",
+          "senior_developer": "Senior Developer"
+        }
+      },
+      {
+        "module_id": "validation_engine",
+        "title": "Validation Engine",
+        "phase": "Decision Boundary",
+        "score": 7,
+        "signals": [
+          "token overlap: 2, engine, validation",
+          "goal references module id",
+          "goal references module group"
+        ],
+        "workflow_roles": {
+          "developer": "Backend Architect",
+          "tester": "API Tester",
+          "analyzer": "Test Results Analyzer",
+          "reviewer": "Code Reviewer",
+          "git_master": "Git Workflow Master",
+          "gate": "Product Manager",
+          "senior_developer": "Senior Developer"
+        }
+      },
+      {
+        "module_id": "execution_compiler",
+        "title": "Execution Compiler",
+        "phase": "Registration and Execution",
+        "score": 6,
+        "signals": [
+          "token overlap: compiler, execution",
+          "goal references module id",
+          "goal references module group"
+        ],
+        "workflow_roles": {
+          "developer": "Backend Architect",
+          "tester": "API Tester",
+          "analyzer": "Test Results Analyzer",
+          "reviewer": "Code Reviewer",
+          "git_master": "Git Workflow Master",
+          "gate": "Product Manager",
+          "senior_developer": "Senior Developer"
+        }
+      },
+      {
+        "module_id": "reactive_runtime",
+        "title": "Reactive Runtime",
+        "phase": "Reactive and Safety",
+        "score": 6,
+        "signals": [
+          "token overlap: reactive, runtime",
+          "goal references module id",
+          "goal references module group"
+        ],
+        "workflow_roles": {
+          "developer": "Backend Architect",
+          "tester": "API Tester",
+          "analyzer": "Test Results Analyzer",
+          "reviewer": "Code Reviewer",
+          "git_master": "Git Workflow Master",
+          "gate": "SRE",
+          "senior_developer": "Senior Developer"
+        }
+      }
+    ],
+    "phase_plan": [
+      {
+        "phase": "Decision Boundary",
+        "modules": [
+          "pre_registration_check",
+          "validation_engine"
+        ]
+      },
+      {
+        "phase": "Registration and Execution",
+        "modules": [
+          "execution_layer",
+          "execution_compiler"
+        ]
+      },
+      {
+        "phase": "Reactive and Safety",
+        "modules": [
+          "reactive_runtime"
+        ]
+      }
+    ],
+    "status": "Approved",
+    "role_outputs": {
+      "product_manager": {
+        "role": "Product Manager",
+        "notes": [
+          "Project goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁",
+          "Keep scope aligned to module contracts and existing workflow phases.",
+          "No module-level draft before decomposition approval.",
+          "Context constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系"
+        ]
+      },
+      "workflow_architect": {
+        "role": "Workflow Architect",
+        "recommended_mode": "project-decomposition",
+        "recommended_module": null,
+        "phase_plan": [
+          {
+            "phase": "Decision Boundary",
+            "modules": [
+              "pre_registration_check",
+              "validation_engine"
+            ]
+          },
+          {
+            "phase": "Registration and Execution",
+            "modules": [
+              "execution_layer",
+              "execution_compiler"
+            ]
+          },
+          {
+            "phase": "Reactive and Safety",
+            "modules": [
+              "reactive_runtime"
+            ]
+          }
+        ]
+      },
+      "software_architect": {
+        "role": "Software Architect",
+        "concerns": [
+          "Validate boundaries against contract scope, handoff, and non-goal clauses.",
+          "Prefer a single module only when one candidate clearly dominates.",
+          "Top candidate: execution_layer (Registration and Execution)"
+        ],
+        "top_modules": [
+          {
+            "module_id": "execution_layer",
+            "title": "Execution Layer",
+            "phase": "Registration and Execution",
+            "score": 9,
+            "signals": [
+              "token overlap: execution, export, layer, reactive",
+              "goal references module id",
+              "goal references module group"
+            ],
+            "workflow_roles": {
+              "developer": "Solidity Smart Contract Engineer",
+              "tester": "API Tester",
+              "analyzer": "Test Results Analyzer",
+              "reviewer": "Code Reviewer",
+              "git_master": "Git Workflow Master",
+              "gate": "Blockchain Security Auditor",
+              "senior_developer": "Senior Developer"
+            }
+          },
+          {
+            "module_id": "pre_registration_check",
+            "title": "PreRegistrationCheck",
+            "phase": "Decision Boundary",
+            "score": 8,
+            "signals": [
+              "token overlap: check, pre, registration, validation",
+              "goal references module id",
+              "goal references module group"
+            ],
+            "workflow_roles": {
+              "developer": "Backend Architect",
+              "tester": "API Tester",
+              "analyzer": "Test Results Analyzer",
+              "reviewer": "Code Reviewer",
+              "git_master": "Git Workflow Master",
+              "gate": "Product Manager",
+              "senior_developer": "Senior Developer"
+            }
+          },
+          {
+            "module_id": "validation_engine",
+            "title": "Validation Engine",
+            "phase": "Decision Boundary",
+            "score": 7,
+            "signals": [
+              "token overlap: 2, engine, validation",
+              "goal references module id",
+              "goal references module group"
+            ],
+            "workflow_roles": {
+              "developer": "Backend Architect",
+              "tester": "API Tester",
+              "analyzer": "Test Results Analyzer",
+              "reviewer": "Code Reviewer",
+              "git_master": "Git Workflow Master",
+              "gate": "Product Manager",
+              "senior_developer": "Senior Developer"
+            }
+          },
+          {
+            "module_id": "execution_compiler",
+            "title": "Execution Compiler",
+            "phase": "Registration and Execution",
+            "score": 6,
+            "signals": [
+              "token overlap: compiler, execution",
+              "goal references module id",
+              "goal references module group"
+            ],
+            "workflow_roles": {
+              "developer": "Backend Architect",
+              "tester": "API Tester",
+              "analyzer": "Test Results Analyzer",
+              "reviewer": "Code Reviewer",
+              "git_master": "Git Workflow Master",
+              "gate": "Product Manager",
+              "senior_developer": "Senior Developer"
+            }
+          },
+          {
+            "module_id": "reactive_runtime",
+            "title": "Reactive Runtime",
+            "phase": "Reactive and Safety",
+            "score": 6,
+            "signals": [
+              "token overlap: reactive, runtime",
+              "goal references module id",
+              "goal references module group"
+            ],
+            "workflow_roles": {
+              "developer": "Backend Architect",
+              "tester": "API Tester",
+              "analyzer": "Test Results Analyzer",
+              "reviewer": "Code Reviewer",
+              "git_master": "Git Workflow Master",
+              "gate": "SRE",
+              "senior_developer": "Senior Developer"
+            }
+          }
+        ]
+      },
+      "senior_project_manager": {
+        "role": "Senior Project Manager",
+        "backlog": [
+          {
+            "phase": "Decision Boundary",
+            "modules": [
+              "pre_registration_check",
+              "validation_engine"
+            ],
+            "order_hint": "Start from the first module in phase order."
+          },
+          {
+            "phase": "Registration and Execution",
+            "modules": [
+              "execution_layer",
+              "execution_compiler"
+            ],
+            "order_hint": "Start from the first module in phase order."
+          },
+          {
+            "phase": "Reactive and Safety",
+            "modules": [
+              "reactive_runtime"
+            ],
+            "order_hint": "Start from the first module in phase order."
+          }
+        ]
+      },
+      "technical_writer": {
+        "role": "Technical Writer",
+        "synthesis": "# Project Decomposition\n\n- `状态：` Proposed\n\n## Technical Writer Synthesis\n\n- Project decomposition required before module-level draft\n\n## Product Manager\n\n- Project goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁\n- Keep scope aligned to module contracts and existing workflow phases.\n- No module-level draft before decomposition approval.\n- Context constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系\n\n## Workflow Architect\n\n- Recommended mode: `project-decomposition`\n\n## Software Architect\n\n- Validate boundaries against contract scope, handoff, and non-goal clauses.\n- Prefer a single module only when one candidate clearly dominates.\n- Top candidate: execution_layer (Registration and Execution)\n\n## Senior Project Manager\n\n- `Decision Boundary`: pre_registration_check, validation_engine\n- `Registration and Execution`: execution_layer, execution_compiler\n- `Reactive and Safety`: reactive_runtime\n\n## Review Gate\n\n- This proposal must be approved before module-level `draft`.\n\n## Top Candidates\n\n- `execution_layer` (Execution Layer)\n  - Phase: `Registration and Execution`\n  - Score: `9`\n  - Roles: developer `Solidity Smart Contract Engineer`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Blockchain Security Auditor`\n  - Signals: token overlap: execution, export, layer, reactive, goal references module id, goal references module group\n- `pre_registration_check` (PreRegistrationCheck)\n  - Phase: `Decision Boundary`\n  - Score: `8`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: check, pre, registration, validation, goal references module id, goal references module group\n- `validation_engine` (Validation Engine)\n  - Phase: `Decision Boundary`\n  - Score: `7`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: 2, engine, validation, goal references module id, goal references module group\n- `execution_compiler` (Execution Compiler)\n  - Phase: `Registration and Execution`\n  - Score: `6`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: compiler, execution, goal references module id, goal references module group\n- `reactive_runtime` (Reactive Runtime)\n  - Phase: `Reactive and Safety`\n  - Score: `6`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `SRE`\n  - Signals: token overlap: reactive, runtime, goal references module id, goal references module group\n\n## Phase Plan\n\n- `Decision Boundary`: pre_registration_check, validation_engine\n- `Registration and Execution`: execution_layer, execution_compiler\n- `Reactive and Safety`: reactive_runtime\n\n## Next Step\n\n- Approve the split, then run `spawn-decomposition` to generate role packets."
+      }
+    },
+    "summary": {
+      "goal": "制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁",
+      "recommended_mode": "project-decomposition",
+      "recommended_module": null,
+      "top_candidate_ids": [
+        "execution_layer",
+        "pre_registration_check",
+        "validation_engine",
+        "execution_compiler",
+        "reactive_runtime"
+      ],
+      "phase_names": [
+        "Decision Boundary",
+        "Registration and Execution",
+        "Reactive and Safety"
+      ]
+    },
+    "markdown": "# Project Decomposition\n\n- `状态：` Proposed\n\n## Technical Writer Synthesis\n\n- Project decomposition required before module-level draft\n\n## Product Manager\n\n- Project goal: 制定并执行 Phase2 开发计划（按 PRD 标准），覆盖 execution_compiler、reactive_runtime、validation_engine、pre_registration_check、execution_layer、export_outputs，并产出可审阅里程碑与验收门禁\n- Keep scope aligned to module contracts and existing workflow phases.\n- No module-level draft before decomposition approval.\n- Context constraints: 保持小步可审查 diff；先 Happy Path 后旁路；每个模块有 DoD 与最小测试集；形成周节奏与串并行关系\n\n## Workflow Architect\n\n- Recommended mode: `project-decomposition`\n\n## Software Architect\n\n- Validate boundaries against contract scope, handoff, and non-goal clauses.\n- Prefer a single module only when one candidate clearly dominates.\n- Top candidate: execution_layer (Registration and Execution)\n\n## Senior Project Manager\n\n- `Decision Boundary`: pre_registration_check, validation_engine\n- `Registration and Execution`: execution_layer, execution_compiler\n- `Reactive and Safety`: reactive_runtime\n\n## Review Gate\n\n- This proposal must be approved before module-level `draft`.\n\n## Top Candidates\n\n- `execution_layer` (Execution Layer)\n  - Phase: `Registration and Execution`\n  - Score: `9`\n  - Roles: developer `Solidity Smart Contract Engineer`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Blockchain Security Auditor`\n  - Signals: token overlap: execution, export, layer, reactive, goal references module id, goal references module group\n- `pre_registration_check` (PreRegistrationCheck)\n  - Phase: `Decision Boundary`\n  - Score: `8`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: check, pre, registration, validation, goal references module id, goal references module group\n- `validation_engine` (Validation Engine)\n  - Phase: `Decision Boundary`\n  - Score: `7`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: 2, engine, validation, goal references module id, goal references module group\n- `execution_compiler` (Execution Compiler)\n  - Phase: `Registration and Execution`\n  - Score: `6`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `Product Manager`\n  - Signals: token overlap: compiler, execution, goal references module id, goal references module group\n- `reactive_runtime` (Reactive Runtime)\n  - Phase: `Reactive and Safety`\n  - Score: `6`\n  - Roles: developer `Backend Architect`, tester `API Tester`, analyzer `Test Results Analyzer`, reviewer `Code Reviewer`, git_master `Git Workflow Master`, gate `SRE`\n  - Signals: token overlap: reactive, runtime, goal references module id, goal references module group\n\n## Phase Plan\n\n- `Decision Boundary`: pre_registration_check, validation_engine\n- `Registration and Execution`: execution_layer, execution_compiler\n- `Reactive and Safety`: reactive_runtime\n\n## Next Step\n\n- Approve the split, then run `spawn-decomposition` to generate role packets."
+  }
+}

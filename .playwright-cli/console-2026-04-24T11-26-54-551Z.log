@@ -1,0 +1,6 @@
+[    4429ms] [ERROR] Framing 'https://www.google.com/' violates the following report-only Content Security Policy directive: "frame-ancestors 'self'". The violation has been logged, but no further action has been taken.
+ @ :0
+[    6919ms] [WARNING] Datadog Browser SDK: SDK is loaded more than once. This is unsupported and might have unexpected behavior. @ https://www.datadoghq-browser-agent.com/us1/v5/datadog-rum.js:0
+[   12485ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://faucet.circle.com/_next/static/chunks/65851-47f87224c26fa861.js:0
+[   40175ms] [WARNING] Datadog Browser SDK: SDK is loaded more than once. This is unsupported and might have unexpected behavior. @ https://www.datadoghq-browser-agent.com/us1/v5/datadog-rum.js:0
+[   49402ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://faucet.circle.com/_next/static/chunks/65851-47f87224c26fa861.js:0

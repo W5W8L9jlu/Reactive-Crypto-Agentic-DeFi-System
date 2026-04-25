@@ -1,0 +1,30 @@
+{
+  "workflow": "Module Execution",
+  "status": "ReadyForSpawn",
+  "module_id": "validation_engine",
+  "title": "Validation Engine",
+  "phase": "Decision Boundary",
+  "read_first": [
+    "docs/knowledge/01_core/01_system_invariants.md",
+    "docs/knowledge/01_core/02_domain_models.md",
+    "docs/knowledge/03_strategy_validation/01_strategy_boundary.md",
+    "docs/knowledge/03_strategy_validation/02_validation_engine.md",
+    "docs/contracts/validation_engine.contract.md",
+    "docs/prompts/validation_engine.prompt.md"
+  ],
+  "only_edit": [
+    "backend/validation/"
+  ],
+  "suggested_checks": [
+    "python -m pytest backend/validation/test_phase1_real_rpc_gate.py -q",
+    "python -m pytest backend/validation/test_pre_registration_check.py -q",
+    "python -m pytest backend/validation/test_strategy_risk_boundaries.py -q",
+    "python -m pytest backend/validation/test_validation_engine.py -q"
+  ],
+  "files": {
+    "draft": "draft.json",
+    "review": "review.md",
+    "approved": "approved.json",
+    "spawn": "spawn.json"
+  }
+}

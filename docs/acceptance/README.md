@@ -14,6 +14,10 @@
 
 ## 目录
 - `00_overview/`：整体流程与 DoD
+  - `04_phase1_go_no_go.md`：Phase 1 上线清单模板
+  - `05_phase1_go_no_go_instance.md`：Phase 1 当前状态实例
+  - `06_phase1_full_chain_go_no_go.md`：Phase 1 全链路真实执行上线清单
+  - `07_phase1_preproduction_go_no_go.md`：Phase 1 预生产上线清单
 - `01_thread_acceptance/`：线程内验收模板
 - `02_wave_acceptance/`：Wave 内验收模板
 - `03_thread_handoff/`：线程间对接模板

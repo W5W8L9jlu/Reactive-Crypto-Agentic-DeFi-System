@@ -13,12 +13,15 @@ Read these files first, in order:
 2. docs/knowledge/01_core/02_domain_models.md
 3. docs/knowledge/04_execution/01_execution_compiler.md
 4. docs/contracts/execution_compiler.contract.md
+5. docs/contracts/phase2_execution_bundle.contract.md
+6. docs/knowledge/08_delivery/04_phase2_prd_alignment.md
 
 Optional supporting files:
 - docs/knowledge/01_core/01_system_invariants.md
 - docs/knowledge/01_core/02_domain_models.md
 - docs/knowledge/03_strategy_validation/03_pre_registration_check.md
 - docs/knowledge/05_reactive_contracts/02_investment_state_machine.md
+- docs/knowledge/08_delivery/03_phase_plan.md
 
 Only edit these paths:
 - backend/execution/compiler/
@@ -46,6 +49,7 @@ Verification:
 - 编译结果字段完整性
 - 入场/出场约束分离测试
 - 非法输入异常测试
+- `python scripts/workflow.py check execution_compiler --execute --strict`
 
 When spec is missing:
 - do not invent behavior

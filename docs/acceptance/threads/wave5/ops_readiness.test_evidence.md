@@ -62,3 +62,58 @@ C:\Python314\python.exe scripts/run_phase1_regression.py --with-chain
   - 当前结果：`FAILED`（缺 `external_refs/CryptoAgents` 运行仓库或依赖）。
 - Mainnet 小额灰度未启动：按 gate 要求需先完成并留档 Sepolia smoke。
 - 仓库快照治理未完成：工作树仍存在大量历史 `M/??` 与生成物噪音（本轮未做破坏性清理）。
+
+## 5) 2026-04-24 预flight结果（未注入私钥）
+
+- 命令：`python scripts/check_sepolia_smoke_env.py`
+- 结果：`FAILED`
+- 事实：当前进程 env 存在 `SEPOLIA_RPC_URL` 或 `BASE_SEPOLIA_RPC_URL`，存在 `REACTIVE_INVESTMENT_COMPILER_ADDRESS`，不存在 `SEPOLIA_PRIVATE_KEY`，不存在 `REACTIVE_INVESTMENT_COMPILER_ARTIFACT`，默认 artifact 路径 `backend/contracts/out/ReactiveInvestmentCompiler.sol/ReactiveInvestmentCompiler.json` 存在。
+
+## 6) 2026-04-24 真实链 smoke 结果（已从用户级环境注入私钥）
+
+- 命令：
+  - `python scripts/check_sepolia_smoke_env.py`
+  - `python scripts/run_sepolia_smoke.py`
+- 结果：`success`
+- 说明：本次 smoke 运行前，已将用户级 `SEPOLIA_PRIVATE_KEY` 注入当前 shell 进程；与上一节的失败预检不是同一次环境状态。
+- artifact：`docs/acceptance/threads/wave5/artifacts/sepolia_smoke_20260424-043038.json`
+- register tx：`0x64483ba7a713eb178adf94f8da89d4cfb742a3563e7377192e78d171263191e0`
+- entry tx：`0x01879303366426cef6d4a3ee30c5950a8e25f1d17ee2464fcd957cfc941a8729`
+- force-close tx：`0x1beb88ea87fce8ed76c2f034ef040e375890993cea2509a3737108930a9898f5`
+- final state：`Closed`
+
+## 7) 2026-04-24 Shadow Monitor `shadow-status` 记录
+
+- 命令：`python -m backend.cli.entrypoint monitor shadow-status`
+- 结果：`healthy`
+- tracked_intents：`1`
+- critical_alerts：`0`
+- checked_at：`2026-04-24T05:11:04.448328+00:00`
+- source：`runtime_store`
+- latest_monitor_status：`{checked_at: 2026-04-11T03:26:28.577428+00:00, status: healthy}`
+
+## 8) 2026-04-24 关键告警触发补证
+
+- smoke 命令：`python scripts/run_sepolia_smoke.py`
+- 触发条件：`ShadowMonitor(grace_period_seconds=0)` + breached snapshot（`mark_price=2910`，`threshold_price=2950`）
+- artifact：`docs/acceptance/threads/wave5/artifacts/sepolia_smoke_20260424-043038.json`
+- 记录结果：
+  - `monitor_alert_count: 1`
+  - `force_close_recommendation_count: 1`
+  - `final_state: Closed`
+- 结论范围：这里只记录这次预生产 smoke 确实走到了关键告警与 force-close recommendation 路径，不延伸解释为更广泛的运维签收完成。
+
+## 9) 2026-04-24 Phase 1 真实 RPC 门禁（Base Sepolia）
+
+- 命令：
+  - `PHASE1_GATE_NETWORK=base_sepolia python -m pytest -q backend/validation/test_phase1_real_rpc_gate.py`
+- 结果：`1 passed`
+- 说明：
+  - `DecisionContextBuilder -> PreRegistrationCheck` 在真实 Base Sepolia RPC 上完成。
+  - `Uniswap V3` 路径成功读取 `slot0 / liquidity / balanceOf / allowance`。
+  - 后续补操作已执行：
+    - Base Sepolia `USDC approve(spender, 200)` 成功，`tx_hash = 0x4e7f5dc93e0d253c71e22e5b13c52289a08943b6c10c4450f4752bb366dff3c5`
+    - Circle Faucet（Base Sepolia）已成功发放 `20 USDC`
+  - 当前钱包在该链上状态为 `wallet balance = 20`、`allowance = 200`。
+  - 默认 `position_usd = 200` 下仍返回 `InsufficientBalanceError`，属于**正确拒绝**，不是假通过。
+- evidence：`docs/acceptance/threads/wave5/phase1_real_rpc_gate_base_sepolia.test_evidence.md`

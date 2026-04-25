@@ -7,9 +7,13 @@ name = "reactive-crypto-agentic-defi-system"
 version = "0.1.0"
 description = "CLI-first reactive DeFi system with strategy boundaries and runtime safety controls."
 requires-python = ">=3.10"
+dependencies = [
+    "web3>=7.15.0,<8.0.0",
+]
 
 [project.scripts]
 agent-cli = "backend.cli.entrypoint:main"
+workflow = "backend.workflow.runner:main"
 
 [tool.setuptools]
 include-package-data = true
