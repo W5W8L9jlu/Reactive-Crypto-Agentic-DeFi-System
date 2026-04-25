@@ -2,40 +2,82 @@
 
 ## 目的
 
-将 PRD Phase 2 条目映射为仓库可执行任务，作为 `phase_plan` 的补充对齐文档。  
-若历史文档与 PRD Phase 2 冲突，以 PRD 为准并在本文件记录调整。
+将 Phase2 文档统一收敛到 PRD v11 的 Core Execution Loop 边界。若历史 PRD v10、旧 Phase Plan 或旧验收文件与 v11 冲突，以 v11 Phase2 边界为准，并在本文件记录调整。
 
-## PRD Phase2 条目映射
+## Phase2 总边界
 
-| PRD 条目 | 模块落点 | 验收要点 |
+Phase2 只交付一个最小可用链上条件执行闭环：
+
+```text
+TradeIntent
+-> Validation
+-> PreRegistrationCheck
+-> ExecutionCompiler
+-> registerInvestmentIntent
+-> PendingEntry
+-> ActivePosition
+-> Closed
+-> ExecutionRecord
+-> Export
+```
+
+固定约束：
+
+- single-chain only
+- long-only only
+- Uniswap V2-compatible only
+- register-time `tokenIn` custody
+- LocalExecutor first, ReactiveExecutorAdapter v1 later
+- JSON and chain events are execution truth
+- disabled features fail fast
+
+## Source Documents
+
+| Source | Alignment Role |
+| --- | --- |
+| `prd_final_v11_phase2_core_execution_loop.md` | Phase2 product and safety boundary |
+| `prd_phase2_lite_agile_v1.md` | stories, acceptance criteria, DoD |
+| `phase2_wave_development_plan_v1.md` | W0-W4 delivery cadence |
+| `phase2_vibe_coding_development_paradigm_v1.md` | documentation production workflow |
+
+## PRD 条目映射
+
+| PRD v11 条目 | 仓库落点 | 验收要点 |
 | --- | --- | --- |
-| Execution Compiler | `execution_compiler` | 注册时编译，触发时不重编译 |
-| Reactive 入场触发 | `reactive_runtime`, `execution_layer` | 条件入场可触发，状态可推进 |
-| Validation Engine | `validation_engine` | 条件意图校验与拒绝理由可追溯 |
-| PreRegistrationCheck | `pre_registration_check` | 基于 RPC 真相执行 allow/reject |
-| 链上 Callback 运行时检查 | `execution_layer`, `reactive_runtime` | 非法触发被阻断且错误可诊断 |
-| Reactive stop/tp | `reactive_runtime`, `execution_layer` | stop/tp 与注册参数一致 |
-| Audit Markdown / Memo 导出 | `export_outputs` | 三轨输出一致且职责分离 |
-| 跨链接口/多链消息扩展 | `execution_layer`, `reactive_runtime` | 非空壳，存在最小可验证链路 |
+| Phase2 schemas | `shared/schemas`, `docs/contracts/phase2_interface_freeze.contract.md` | Pydantic v2 models and JSON Schema export |
+| Validation Engine v1 | `validation_engine` | template boundary, long-only, single-chain, V2-only, disabled feature rejection |
+| PreRegistrationCheck v1 | `pre_registration_check` | RPC truth for balance, allowance, TTL, gas, reserves, slippage, gas/profit |
+| Execution Compiler v1 | `execution_compiler` | registration-time payload compilation, no trigger-time recompilation |
+| ReactiveInvestmentCompiler v1 | `investment_state_machine_contract` | custody, PendingEntry, ActivePosition, Closed, emergencyForceClose |
+| Price Oracle Adapter | `phase2_price_oracle_adapter.contract.md` | E18 price and V2 quote behavior |
+| LocalExecutorAdapter | `phase2_local_executor.contract.md` | local/fork/testnet trigger path |
+| ReactiveExecutorAdapter v1 | `reactive_runtime` | callback adapter, no free decision |
+| Event Syncer | `phase2_event_syncer.contract.md` | events to ExecutionRecord, idempotent sync |
+| Export | `export_outputs` | JSON / Audit Markdown / Investment Memo, with Audit as excerpt only |
 
-## 依赖顺序
+## Moved Out of Phase2
 
-1. `pre_registration_check`
-2. `validation_engine`
-3. `execution_layer`
-4. `execution_compiler`
-5. `reactive_runtime`
-6. `export_outputs`
+| Capability | Phase2 Treatment | Target Stage |
+| --- | --- | --- |
+| complete Approval Flow | `ApprovalRequiredError`, abort registration | Phase 3 |
+| Shadow Monitor daemon | keep events and escape hatch only | Phase 3 |
+| Aave Protection | disabled feature / adapter skeleton only | Phase 3.5 |
+| Uniswap V3 | disabled feature / adapter skeleton only | Phase 3.5 / Phase 4 |
+| Hyperlane / cross-chain | disabled feature / interface only | Phase 4 |
+| webhook alerts | disabled interface only | Phase 3 optional |
+| Postgres / Redis | not in default path | later deployment stage |
 
-## Phase2 Gate（建议）
+## Wave Gate 对齐
 
-- 模块级：所有 scope 模块 `workflow check <module> --execute --strict` 通过
-- 链路级：`register -> entry trigger -> stop/tp -> export` 最小闭环通过
-- 一致性：Machine Truth / Audit Markdown / Memo 字段对齐
-- 扩展级：跨链接口/多链消息具备最小可验证路径
+- W0 freezes interfaces before parallel development.
+- W1 proves offline fixture dry-run.
+- W2 proves local chain/mock DEX state machine.
+- W3 proves fork/testnet E2E with real RPC and V2-compatible route.
+- W4 proves Reactive adapter, hardening, disabled feature failures, and export closure.
 
 ## 冲突处理规则
 
-- 文档冲突：以 PRD Phase 2 条目为准
-- 合同冲突：以 module contract + invariants 为准
-- 实现冲突：优先保证执行真相链路与安全边界，再处理可选扩展
+- Phase boundary conflict: PRD v11 wins.
+- Implementation conflict: system invariants and module contracts win.
+- Wave conflict: W0 frozen interface wins until an interface change request is accepted.
+- Evidence conflict: chain events and Machine Truth JSON win over Markdown summaries.
